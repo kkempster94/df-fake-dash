@@ -1,0 +1,92 @@
+import {
+  BarChart,
+  Bar,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { credentialChartData } from '@/data/mockData'
+
+interface LegendKeyProps {
+  color: string
+  label: string
+}
+
+function LegendKey({ color, label }: LegendKeyProps) {
+  return (
+    <span className="flex items-center gap-[6px]">
+      <span
+        className="shrink-0 rounded-[2px]"
+        style={{ width: 10, height: 10, backgroundColor: color }}
+      />
+      <span
+        className="font-semibold text-body-sm whitespace-nowrap"
+        style={{ color: '#101212' }}
+      >
+        {label}
+      </span>
+    </span>
+  )
+}
+
+export function CredentialChart() {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart
+        data={credentialChartData}
+        barCategoryGap={4}
+        barGap={2}
+        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+      >
+        <XAxis dataKey="index" hide />
+        <YAxis domain={[0, 100]} hide />
+        <Tooltip
+          cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+          content={({ active, payload }) => {
+            if (!active || !payload?.length) return null
+            return (
+              <div
+                className="bg-white border border-table-border rounded shadow-sm px-2 py-1 flex flex-col gap-1"
+                style={{ fontSize: 11, color: '#101212' }}
+              >
+                {payload.map((p) => (
+                  <div key={p.dataKey as string} className="flex items-center gap-2">
+                    <span
+                      className="inline-block rounded-sm"
+                      style={{ width: 8, height: 8, backgroundColor: p.fill }}
+                    />
+                    <span>{p.name}: {Math.round((p.value as number) * 131)}</span>
+                  </div>
+                ))}
+              </div>
+            )
+          }}
+        />
+        <Bar
+          dataKey="x509"
+          name="X.509"
+          fill="rgba(2,174,231,0.5)"
+          radius={[2, 2, 0, 0]}
+          maxBarSize={10}
+        />
+        <Bar
+          dataKey="jwt"
+          name="JWT"
+          fill="rgba(29,195,115,0.5)"
+          radius={[2, 2, 0, 0]}
+          maxBarSize={10}
+        />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function CredentialChartLegend() {
+  return (
+    <div className="flex items-center gap-4">
+      <LegendKey color="rgba(2,174,231,0.5)" label="X.509" />
+      <LegendKey color="rgba(29,195,115,0.5)" label="JWT" />
+    </div>
+  )
+}

@@ -1,0 +1,39 @@
+Lead development of our next-generation management portal
+Create sophisticated visualizations for complex infrastructure identity relationships and access patterns
+Design and implement interfaces that handle massive datasets efficiently
+Work across multiple interface types (UI, CLI, SDK) to ensure consistent user experience
+Collaborate with UX designers to create intuitive interfaces for different user personas (operators, security engineers, platform engineers)
+Build interactive features for infrastructure management and real-time monitoring
+Implement advanced data visualization patterns for complex identity relationships
+Design interfaces that scale to enterprise requirements
+Technical requirements
+Expert-level proficiency with React and modern JavaScript
+Strong experience with data visualization libraries (e.g., Recharts) and handling large datasets
+Proven track record of building enterprise-scale applications
+Experience with real-time data visualization and WebSocket connections
+Strong TypeScript skills
+Expertise with modern frontend infrastructure and build tools
+Understanding of infrastructure management concepts
+Basic knowledge of security and identity management principles
+Required skills
+Deep understanding of UX patterns for complex technical products
+Experience working with different technical user personas
+Strong systems thinking and ability to understand complex technical concepts
+Expertise in building performant applications that handle large datasets
+Experience with Git and modern development workflows
+Excellent communication skills and ability to work in a cross-functional team
+Self-motivated and able to drive technical decisions
+Nice to have
+Experience building interfaces that integrate with AI/ML features
+Background in building developer tools or enterprise platforms
+Experience building CLI tools or SDKs
+Previous experience with identity and access management systems
+Experience with infrastructure-as-code tools
+Experience building enterprise SaaS applications
+Our stack
+React with TypeScript
+Advanced data visualization libraries
+Real-time data processing
+Modern component libraries
+gRPC, gRPC-Web
+Github, bazel

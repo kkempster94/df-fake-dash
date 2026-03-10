@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-text-primary: #101212;
+  --color-text-secondary: #798585;
+  --color-action: #3e7c79;
+  --color-action-bg: rgba(62, 124, 121, 0.07);
+  --color-action-ring: rgba(62, 124, 121, 0.3);
+  --color-table-header: #edf2f7;
+  --color-table-border: #e9ebed;
+  --color-workload-bar: rgba(2, 124, 231, 0.5);
+  --color-x509-bar: rgba(2, 174, 231, 0.5);
+  --color-jwt-bar: rgba(29, 195, 115, 0.5);
+  --color-x509-bg: rgba(2, 174, 231, 0.08);
+  --color-x509-text: #02aee7;
+  --color-status-good: #28a868;
+  --color-status-good-bg: rgba(40, 168, 104, 0.07);
+  --color-status-degraded: #f59e0b;
+  --color-status-bad: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #f5f7f7;
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Recharts overrides */
+.recharts-cartesian-axis-tick { display: none; }
+.recharts-cartesian-grid { display: none; }
