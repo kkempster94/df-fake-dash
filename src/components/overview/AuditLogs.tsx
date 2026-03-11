@@ -1,22 +1,16 @@
 import { Activity } from 'lucide-react'
-import { auditLogEntries } from '@/data/mockData'
-import type { StatusLevel } from '@/data/mockData'
+import type { AuditLogEntry, StatusLevel } from '@/data/mockData'
+import { Table, TableHeader, TableHeadCell, TableRow, TableCell } from '@/components/ui/Table'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { StatusDot } from '@/components/ui/Badge'
 import { ActionButton } from '@/components/ui/ActionButton'
-
-const HEADER_STYLE = {
-  fontSize: 10,
-  fontWeight: 500,
-  letterSpacing: '0.8px',
-  color: '#101212',
-} as const
 
 interface SummaryPart {
   text: string
   bold: boolean
 }
 
-function Summary({ parts }: { parts: SummaryPart[] }) {
+function RichSummary({ parts }: { parts: SummaryPart[] }) {
   return (
     <p
       className="truncate w-full"
@@ -24,9 +18,7 @@ function Summary({ parts }: { parts: SummaryPart[] }) {
     >
       {parts.map((part, i) =>
         part.bold ? (
-          <strong key={i} className="font-semibold">
-            {part.text}
-          </strong>
+          <strong key={i} className="font-semibold">{part.text}</strong>
         ) : (
           <span key={i}>{part.text}</span>
         )
@@ -35,66 +27,44 @@ function Summary({ parts }: { parts: SummaryPart[] }) {
   )
 }
 
-function StatusDotCell({ status }: { status: StatusLevel }) {
-  return (
-    <div className="flex-none flex flex-col h-full justify-center pl-4" style={{ width: 46 }}>
-      <StatusDot status={status} />
-    </div>
-  )
+interface AuditLogsProps {
+  entries: AuditLogEntry[]
 }
 
-export function AuditLogs() {
+export function AuditLogs({ entries }: AuditLogsProps) {
   return (
     <section className="flex flex-col gap-3 w-full pb-4">
-      {/* Section header */}
-      <div className="flex items-center justify-between w-full">
-        <p className="font-semibold text-h3 whitespace-nowrap" style={{ color: '#101212' }}>
-          Recent audit logs for this trust domain
-        </p>
-        <ActionButton label="View all audit logs" Icon={Activity} />
-      </div>
+      <SectionHeader
+        title="Recent audit logs for this trust domain"
+        action={<ActionButton label="View all audit logs" Icon={Activity} />}
+      />
 
-      <div className="bg-white w-full">
-        {/* Table header */}
-        <div
-          className="flex h-[34px] items-center rounded-[4px]"
-          style={{ backgroundColor: '#edf2f7' }}
-        >
-          <div className="flex-none" style={{ width: 46 }} />
-          <div className="flex-1 flex flex-col h-full justify-center min-w-0">
-            <div className="flex items-center py-[6px]">
-              <span className="uppercase" style={HEADER_STYLE}>SUMMARY</span>
-            </div>
-          </div>
-          <div className="flex-none flex flex-col h-full justify-center" style={{ width: 120 }}>
-            <div className="flex items-center pl-2">
-              <span className="uppercase" style={HEADER_STYLE}>TIME</span>
-            </div>
-          </div>
-        </div>
+      <Table>
+        <TableHeader>
+          <TableHeadCell width={46} />
+          <TableHeadCell>SUMMARY</TableHeadCell>
+          <TableHeadCell width={120}>TIME</TableHeadCell>
+        </TableHeader>
 
-        {/* Data rows */}
-        {auditLogEntries.map((entry) => (
-          <div
-            key={entry.id}
-            className="flex h-[34px] items-center"
-            style={{ borderBottom: '1px solid #e9ebed' }}
-          >
-            <StatusDotCell status={entry.status} />
-            <div className="flex-1 flex flex-col h-full justify-center min-w-0 overflow-hidden">
-              <Summary parts={entry.parts} />
-            </div>
-            <div className="flex-none flex flex-col h-full justify-center pl-2" style={{ width: 120 }}>
+        {entries.slice(0, 5).map((entry) => (
+          <TableRow key={entry.id}>
+            <TableCell width={46} className="pl-4">
+              <StatusDot status={entry.status as StatusLevel} />
+            </TableCell>
+            <TableCell className="pl-0">
+              <RichSummary parts={entry.parts} />
+            </TableCell>
+            <TableCell width={120}>
               <span
                 className="truncate"
                 style={{ fontSize: 13, color: '#3e3e3e', letterSpacing: '0.26px' }}
               >
                 {entry.time}
               </span>
-            </div>
-          </div>
+            </TableCell>
+          </TableRow>
         ))}
-      </div>
+      </Table>
     </section>
   )
 }

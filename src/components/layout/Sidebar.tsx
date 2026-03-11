@@ -1,36 +1,26 @@
-import {
-  Layers,
-  Cpu,
-  Fingerprint,
-  Bot,
-  Network,
-  Shield,
-  Activity,
-  ChevronDown,
-  Settings,
-  LogOut,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { NavSection } from '@/components/ui/NavSection'
+import { NavItem } from '@/components/ui/NavItem'
 
-interface NavItem {
-  id: string
-  label: string
-  Icon: LucideIcon
-}
+const DEFAKTO_LOGO = 'https://www.figma.com/api/mcp/asset/6d3e33bc-799c-4ffb-ab50-f3cc274d509e'
 
-const navItems: NavItem[] = [
-  { id: 'overview', label: 'Overview', Icon: Layers },
-  { id: 'workloads', label: 'Workloads', Icon: Cpu },
-  { id: 'identities', label: 'Identities', Icon: Fingerprint },
-  { id: 'agents', label: 'Agents', Icon: Bot },
-  { id: 'federation', label: 'Federation', Icon: Network },
-  { id: 'policies', label: 'Policies', Icon: Shield },
-  { id: 'audit-logs', label: 'Audit Logs', Icon: Activity },
+const MINT_ITEMS = [
+  { id: 'overview',        label: 'Trust domains'  },
+  { id: 'cicd-profiles',   label: 'CI/CD profiles' },
 ]
 
-const bottomItems: NavItem[] = [
-  { id: 'settings', label: 'Settings', Icon: Settings },
-  { id: 'logout', label: 'Sign out', Icon: LogOut },
+const LEDGER_ITEMS = [
+  { id: 'dashboard',           label: 'Dashboard'              },
+  { id: 'scanners',            label: 'Scanners'               },
+  { id: 'static-credentials',  label: 'Static credentials'     },
+  { id: 'applications',        label: 'Applications'           },
+  { id: 'workflows',           label: 'Remediation workflows'  },
+]
+
+const ORGANIZATION_ITEMS = [
+  { id: 'profile',    label: 'Profile'    },
+  { id: 'label',      label: 'Label'      },
+  { id: 'audit-logs', label: 'Audit logs' },
+  { id: 'settings',   label: 'Settings'   },
 ]
 
 interface SidebarProps {
@@ -38,106 +28,88 @@ interface SidebarProps {
   onNavigate: (id: string) => void
 }
 
-function NavButton({
-  item,
-  isActive,
-  onClick,
-}: {
-  item: NavItem
-  isActive: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-3 w-full px-4 py-2 rounded-lg cursor-pointer border-none text-left transition-colors"
-      style={{
-        backgroundColor: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-        color: isActive ? '#ffffff' : 'rgba(255,255,255,0.55)',
-        fontSize: 13,
-        fontWeight: isActive ? 600 : 400,
-        letterSpacing: '0.26px',
-      }}
-    >
-      <item.Icon
-        size={15}
-        strokeWidth={isActive ? 2 : 1.6}
-        style={{ opacity: isActive ? 1 : 0.7, flexShrink: 0 }}
-      />
-      {item.label}
-    </button>
-  )
-}
-
 export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
   return (
     <aside
       className="flex flex-col h-full shrink-0"
-      style={{ width: 232, backgroundColor: '#131a1a' }}
+      style={{
+        width: 232,
+        backgroundImage: [
+          'linear-gradient(77deg, rgba(101,57,214,0.1) 0%, rgba(101,57,214,0) 100%)',
+          'linear-gradient(-48deg, rgba(17,165,158,0) 24%, rgba(17,165,158,0.12) 100%)',
+        ].join(', '),
+        backgroundColor: '#f5f8f8',
+      }}
     >
-      {/* Logo / brand */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        <div
-          className="rounded-md flex items-center justify-center shrink-0"
-          style={{ width: 28, height: 28, backgroundColor: '#3e7c79' }}
-        >
-          <Shield size={15} color="#fff" strokeWidth={2} />
-        </div>
-        <div>
-          <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, letterSpacing: '0.26px', lineHeight: 1.3 }}>
-            Defakto
-          </p>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: '0.2px', lineHeight: 1.4 }}>
-            Identity Platform
-          </p>
-        </div>
-      </div>
-
-      {/* Trust domain selector */}
+      {/* Brand header */}
       <div
-        className="px-4 py-3 border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+        className="flex items-center shrink-0 px-3"
+        style={{ backgroundColor: '#3e7c79', height: 44 }}
       >
-        <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 500, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 4 }}>
-          Trust Domain
-        </p>
-        <button
-          className="flex items-center justify-between w-full cursor-pointer border-none rounded-md px-2 py-1.5 transition-colors"
-          style={{ backgroundColor: 'rgba(255,255,255,0.05)', gap: 6 }}
-        >
-          <span
-            className="font-mono truncate"
-            style={{ color: '#fff', fontSize: 11, letterSpacing: '0.22px' }}
-          >
-            production.example.com
-          </span>
-          <ChevronDown size={13} color="rgba(255,255,255,0.4)" strokeWidth={1.8} style={{ flexShrink: 0 }} />
-        </button>
+        <img
+          src={DEFAKTO_LOGO}
+          alt="Defakto"
+          style={{ height: 28, width: 'auto', maxWidth: '60%' }}
+        />
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-0.5 px-2 py-3 overflow-y-auto">
-        {navItems.map((item) => (
-          <NavButton
-            key={item.id}
-            item={item}
-            isActive={activeItem === item.id}
-            onClick={() => onNavigate(item.id)}
+      {/* Nav sections */}
+      <nav
+        className="flex-1 overflow-y-auto flex flex-col justify-between"
+        style={{ padding: 16, paddingTop: 32, paddingBottom: 32 }}
+      >
+        <div className="flex flex-col" style={{ gap: 24 }}>
+          <NavSection
+            heading="MINT"
+            items={MINT_ITEMS}
+            activeId={activeItem}
+            onNavigate={onNavigate}
           />
-        ))}
+          <NavSection
+            heading="LEDGER"
+            items={LEDGER_ITEMS}
+            activeId={activeItem}
+            onNavigate={onNavigate}
+          />
+          <NavSection
+            heading="ORGANIZATION"
+            items={ORGANIZATION_ITEMS}
+            activeId={activeItem}
+            onNavigate={onNavigate}
+          />
+        </div>
+
+        {/* User profile */}
+        <div className="flex flex-col" style={{ gap: 12 }}>
+          <div style={{ paddingLeft: 8 }}>
+            <p
+              style={{
+                color: '#101212',
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: '0.26px',
+                lineHeight: 1.5,
+                margin: 0,
+              }}
+            >
+              Darin McAdams
+            </p>
+            <p
+              style={{
+                color: '#798585',
+                fontSize: 13,
+                fontWeight: 400,
+                letterSpacing: '0.26px',
+                lineHeight: 1.5,
+                margin: 0,
+              }}
+            >
+              newco.com
+            </p>
+          </div>
+          <NavItem label="Sign out" isActive={false} onClick={() => {}} />
+        </div>
       </nav>
-
-      {/* Bottom items */}
-      <div className="flex flex-col gap-0.5 px-2 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        {bottomItems.map((item) => (
-          <NavButton
-            key={item.id}
-            item={item}
-            isActive={false}
-            onClick={() => {}}
-          />
-        ))}
-      </div>
     </aside>
   )
 }
