@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { StatusDot, StatusBadge, CertificateBadge, AudienceTag } from '../Badge'
+import {
+  StatusDot, StatusBadge, CertificateBadge, AudienceTag,
+  PercentageBadge, RemediationWorkflowBadge, ScannedCredentialBadge,
+  RiskScoreBadge, ScannerStatusBadge, AlertBadge,
+} from '../Badge'
 
 describe('StatusDot', () => {
   it('renders a span with good color', () => {
@@ -97,5 +101,119 @@ describe('AudienceTag', () => {
   it('applies teal border color', () => {
     const { container } = render(<AudienceTag label="test" />)
     expect(container.firstChild).toHaveStyle({ border: '1px solid rgba(62,124,121,0.3)' })
+  })
+})
+
+describe('PercentageBadge', () => {
+  it.each([
+    ['neutral',    '#5f6969'],
+    ['concerning', '#ff7020'],
+    ['bad',        '#cd3d61'],
+    ['good',       '#28a868'],
+  ] as const)('renders %s type with correct color', (type, color) => {
+    render(<PercentageBadge type={type} value="75%" />)
+    expect(screen.getByText('75%')).toHaveStyle({ color })
+  })
+
+  it('renders the value text', () => {
+    render(<PercentageBadge type="good" value="42%" />)
+    expect(screen.getByText('42%')).toBeInTheDocument()
+  })
+})
+
+describe('RemediationWorkflowBadge', () => {
+  it.each([
+    ['NotStarted', 'Not Started'],
+    ['Cloning',    'Cloning'],
+    ['Complete',   'Complete'],
+    ['Deploying',  'Deploying'],
+    ['Planning',   'Planning'],
+    ['Pending',    'Pending'],
+  ] as const)('renders %s status label', (status, label) => {
+    render(<RemediationWorkflowBadge status={status} />)
+    expect(screen.getByText(label)).toBeInTheDocument()
+  })
+
+  it('renders Complete with green color', () => {
+    const { container } = render(<RemediationWorkflowBadge status="Complete" />)
+    expect(container.firstChild).toHaveStyle({ color: '#28a868' })
+  })
+
+  it('renders Pending with amber color', () => {
+    const { container } = render(<RemediationWorkflowBadge status="Pending" />)
+    expect(container.firstChild).toHaveStyle({ color: '#f59e0b' })
+  })
+})
+
+describe('ScannedCredentialBadge', () => {
+  it.each(['Remediated', 'Unused', 'Active'] as const)('renders %s status text', (status) => {
+    render(<ScannedCredentialBadge status={status} />)
+    expect(screen.getByText(status)).toBeInTheDocument()
+  })
+
+  it('renders Active with green color', () => {
+    const { container } = render(<ScannedCredentialBadge status="Active" />)
+    expect(container.firstChild).toHaveStyle({ color: '#28a868' })
+  })
+})
+
+describe('RiskScoreBadge', () => {
+  it.each(['Good', 'Concerning', 'Bad'] as const)('renders %s level text', (level) => {
+    render(<RiskScoreBadge level={level} />)
+    expect(screen.getByText(level)).toBeInTheDocument()
+  })
+
+  it('renders Good with green color', () => {
+    const { container } = render(<RiskScoreBadge level="Good" />)
+    expect(container.firstChild).toHaveStyle({ color: '#28a868' })
+  })
+
+  it('renders Bad with red color', () => {
+    const { container } = render(<RiskScoreBadge level="Bad" />)
+    expect(container.firstChild).toHaveStyle({ color: '#cd3d61' })
+  })
+})
+
+describe('ScannerStatusBadge', () => {
+  it('renders Active text', () => {
+    render(<ScannerStatusBadge status="Active" />)
+    expect(screen.getByText('Active')).toBeInTheDocument()
+  })
+
+  it('renders Inactive text', () => {
+    render(<ScannerStatusBadge status="Inactive" />)
+    expect(screen.getByText('Inactive')).toBeInTheDocument()
+  })
+
+  it('renders Active with green color', () => {
+    const { container } = render(<ScannerStatusBadge status="Active" />)
+    expect(container.firstChild).toHaveStyle({ color: '#28a868' })
+  })
+
+  it('renders Inactive with neutral color', () => {
+    const { container } = render(<ScannerStatusBadge status="Inactive" />)
+    expect(container.firstChild).toHaveStyle({ color: '#5f6969' })
+  })
+})
+
+describe('AlertBadge', () => {
+  it('renders a badge element', () => {
+    const { container } = render(<AlertBadge />)
+    expect(container.firstChild).toBeInTheDocument()
+  })
+
+  it('renders count when provided', () => {
+    render(<AlertBadge count={5} />)
+    expect(screen.getByText('5')).toBeInTheDocument()
+  })
+
+  it('has red background', () => {
+    const { container } = render(<AlertBadge count={1} />)
+    expect(container.firstChild).toHaveStyle({ backgroundColor: '#cd3d61' })
+  })
+
+  it('has white text color', () => {
+    const { container } = render(<AlertBadge count={1} />)
+    expect(container.firstChild).toHaveStyle({ color: '#ffffff' })
   })
 })

@@ -1,46 +1,16 @@
 import { useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
+import { FormField } from '@/components/ui/FormField'
+import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
+import { Button } from '@/components/ui/Button'
 
-interface FormRowProps {
-  label: string
-  hint?: string
-  children: React.ReactNode
-}
-
-function FormRow({ label, hint, children }: FormRowProps) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label
-        className="font-medium"
-        style={{ fontSize: 12, color: '#101212', letterSpacing: '0.24px' }}
-      >
-        {label}
-      </label>
-      {children}
-      {hint && (
-        <p style={{ fontSize: 11, color: '#798585', letterSpacing: '0.22px' }}>{hint}</p>
-      )}
-    </div>
-  )
-}
-
-const INPUT_STYLE = {
-  width: '100%',
-  border: '1px solid #e9ebed',
-  borderRadius: 4,
-  padding: '6px 10px',
-  fontSize: 12,
-  color: '#101212',
-  letterSpacing: '0.24px',
-  outline: 'none',
-  fontFamily: 'inherit',
-  backgroundColor: '#fff',
-} as const
-
-const SELECT_STYLE = {
-  ...INPUT_STYLE,
-  cursor: 'pointer',
-} as const
+const KEY_TYPE_OPTIONS = [
+  { value: 'EC_P256',  label: 'EC P-256'  },
+  { value: 'EC_P384',  label: 'EC P-384'  },
+  { value: 'RSA_2048', label: 'RSA 2048'  },
+  { value: 'RSA_4096', label: 'RSA 4096'  },
+]
 
 interface TrustDomainSettingsModalProps {
   isOpen: boolean
@@ -51,11 +21,11 @@ export function TrustDomainSettingsModal({
   isOpen,
   onClose,
 }: TrustDomainSettingsModalProps) {
-  const [svidTtl, setSvidTtl] = useState('3600')
-  const [jwtTtl, setJwtTtl] = useState('300')
-  const [keyType, setKeyType] = useState('EC_P256')
+  const [svidTtl, setSvidTtl]         = useState('3600')
+  const [jwtTtl, setJwtTtl]           = useState('300')
+  const [keyType, setKeyType]         = useState('EC_P256')
   const [bundleRefresh, setBundleRefresh] = useState('300')
-  const [saved, setSaved] = useState(false)
+  const [saved, setSaved]             = useState(false)
 
   const handleSave = () => {
     setSaved(true)
@@ -67,25 +37,10 @@ export function TrustDomainSettingsModal({
 
   const footer = (
     <>
-      <button
-        onClick={onClose}
-        className="cursor-pointer border rounded-md px-4 py-1.5 font-medium transition-colors"
-        style={{ fontSize: 12, color: '#798585', borderColor: '#e9ebed', backgroundColor: '#fff' }}
-      >
-        Cancel
-      </button>
-      <button
-        onClick={handleSave}
-        className="cursor-pointer border-none rounded-md px-4 py-1.5 font-semibold transition-colors"
-        style={{
-          fontSize: 12,
-          color: '#fff',
-          backgroundColor: saved ? '#28a868' : '#3e7c79',
-          letterSpacing: '0.24px',
-        }}
-      >
+      <Button variant="secondary" onClick={onClose}>Cancel</Button>
+      <Button variant="primary" onClick={handleSave}>
         {saved ? 'Saved!' : 'Save changes'}
-      </button>
+      </Button>
     </>
   )
 
@@ -98,64 +53,71 @@ export function TrustDomainSettingsModal({
       width={500}
     >
       <div className="flex flex-col gap-5">
-        {/* Read-only trust domain name */}
-        <FormRow label="Trust domain" hint="The trust domain name cannot be changed after creation.">
-          <input
+        <FormField
+          label="Trust domain"
+          message="The trust domain name cannot be changed after creation."
+          messageType="neutral"
+        >
+          <Input
             readOnly
             value="production.example.com"
-            style={{ ...INPUT_STYLE, backgroundColor: '#f5f7f7', color: '#798585', fontFamily: '"PT Mono", monospace' }}
+            disabled
+            className="font-mono"
           />
-        </FormRow>
+        </FormField>
 
         <div className="flex gap-4">
           <div className="flex-1">
-            <FormRow label="X.509 SVID TTL (seconds)" hint="Default credential lifetime.">
-              <input
+            <FormField
+              label="X.509 SVID TTL (seconds)"
+              message="Default credential lifetime."
+              messageType="neutral"
+            >
+              <Input
                 type="number"
-                min={60}
-                max={86400}
                 value={svidTtl}
                 onChange={(e) => setSvidTtl(e.target.value)}
-                style={INPUT_STYLE}
               />
-            </FormRow>
+            </FormField>
           </div>
           <div className="flex-1">
-            <FormRow label="JWT SVID TTL (seconds)" hint="Default JWT credential lifetime.">
-              <input
+            <FormField
+              label="JWT SVID TTL (seconds)"
+              message="Default JWT credential lifetime."
+              messageType="neutral"
+            >
+              <Input
                 type="number"
-                min={60}
-                max={86400}
                 value={jwtTtl}
                 onChange={(e) => setJwtTtl(e.target.value)}
-                style={INPUT_STYLE}
               />
-            </FormRow>
+            </FormField>
           </div>
         </div>
 
-        <FormRow label="CA key type" hint="Key algorithm used for signing SVIDs.">
-          <select
+        <FormField
+          label="CA key type"
+          message="Key algorithm used for signing SVIDs."
+          messageType="neutral"
+        >
+          <Select
+            options={KEY_TYPE_OPTIONS}
             value={keyType}
-            onChange={(e) => setKeyType(e.target.value)}
-            style={SELECT_STYLE}
-          >
-            <option value="EC_P256">EC P-256</option>
-            <option value="EC_P384">EC P-384</option>
-            <option value="RSA_2048">RSA 2048</option>
-            <option value="RSA_4096">RSA 4096</option>
-          </select>
-        </FormRow>
+            onChange={setKeyType}
+          />
+        </FormField>
 
-        <FormRow label="Bundle refresh interval (seconds)" hint="How often agents re-fetch the trust bundle.">
-          <input
+        <FormField
+          label="Bundle refresh interval (seconds)"
+          message="How often agents re-fetch the trust bundle."
+          messageType="neutral"
+        >
+          <Input
             type="number"
-            min={30}
             value={bundleRefresh}
             onChange={(e) => setBundleRefresh(e.target.value)}
-            style={INPUT_STYLE}
           />
-        </FormRow>
+        </FormField>
       </div>
     </Modal>
   )

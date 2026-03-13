@@ -2,14 +2,15 @@ interface NavItemProps {
   label: string
   isActive: boolean
   onClick: () => void
+  alertBadge?: boolean
 }
 
-export function NavItem({ label, isActive, onClick }: NavItemProps) {
+export function NavItem({ label, isActive, onClick, alertBadge }: NavItemProps) {
   return (
     <button
       onClick={onClick}
       aria-current={isActive ? 'page' : undefined}
-      className="w-full text-left cursor-pointer border-none rounded transition-colors"
+      className="w-full text-left cursor-pointer border-none rounded transition-colors flex items-center gap-1.5"
       style={{
         backgroundColor: isActive ? 'rgba(255,255,255,0.7)' : 'transparent',
         color: '#101212',
@@ -23,6 +24,13 @@ export function NavItem({ label, isActive, onClick }: NavItemProps) {
       }}
     >
       {label}
+      {alertBadge && (
+        <span
+          className="inline-block rounded-full shrink-0"
+          style={{ width: 6, height: 6, backgroundColor: '#cd3d61' }}
+          aria-label="alert"
+        />
+      )}
     </button>
   )
 }

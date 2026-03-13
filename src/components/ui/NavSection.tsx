@@ -3,6 +3,7 @@ import { NavItem } from './NavItem'
 interface NavEntry {
   id: string
   label: string
+  alertBadge?: boolean
 }
 
 interface NavSectionProps {
@@ -35,6 +36,7 @@ export function NavSection({ heading, items, activeId, onNavigate }: NavSectionP
             label={item.label}
             isActive={activeId === item.id}
             onClick={() => onNavigate(item.id)}
+            alertBadge={item.alertBadge}
           />
         ))}
       </div>

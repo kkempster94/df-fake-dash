@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>21/21</span>
+                <span class='fraction'>26/26</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>13/13</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>21/21</span>
+                <span class='fraction'>26/26</span>
             </div>
         
             
@@ -95,9 +95,11 @@
 <a name='L30'></a><a href='#L30'>30</a>
 <a name='L31'></a><a href='#L31'>31</a>
 <a name='L32'></a><a href='#L32'>32</a>
-<a name='L33'></a><a href='#L33'>33</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -105,57 +107,67 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { LucideIcon } from 'lucide-react'
-&nbsp;
-interface NavItemProps {
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">interface NavItemProps {
   label: string
-  Icon: LucideIcon
   isActive: boolean
   onClick: () =&gt; void
+  alertBadge?: boolean
 }
 &nbsp;
-export function NavItem({ label, Icon, isActive, onClick }: NavItemProps) {
+export function NavItem({ label, isActive, onClick, alertBadge }: NavItemProps) {
   return (
     &lt;button
       onClick={onClick}
       aria-current={isActive ? 'page' : undefined}
-      className="flex items-center gap-3 w-full px-4 py-2 rounded-lg cursor-pointer border-none text-left transition-colors"
+      className="w-full text-left cursor-pointer border-none rounded transition-colors flex items-center gap-1.5"
       style={{
-        backgroundColor: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-        color: isActive ? '#ffffff' : 'rgba(255,255,255,0.55)',
+        backgroundColor: isActive ? 'rgba(255,255,255,0.7)' : 'transparent',
+        color: '#101212',
         fontSize: 13,
         fontWeight: isActive ? 600 : 400,
         letterSpacing: '0.26px',
+        paddingLeft: 8,
+        paddingRight: 8,
+        paddingTop: 2,
+        paddingBottom: 2,
       }}
     &gt;
-      &lt;Icon
-        size={15}
-        strokeWidth={isActive ? 2 : 1.6}
-        style={{ opacity: isActive ? 1 : 0.7, flexShrink: 0 }}
-      /&gt;
       {label}
+      {alertBadge &amp;&amp; (
+        &lt;span
+          className="inline-block rounded-full shrink-0"
+          style={{ width: 6, height: 6, backgroundColor: '#cd3d61' }}
+          aria-label="alert"
+        /&gt;
+      )}
     &lt;/button&gt;
   )
 }
@@ -166,7 +178,7 @@ export function NavItem({ label, Icon, isActive, onClick }: NavItemProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-10T03:05:59.943Z
+                at 2026-03-12T20:49:31.967Z
             </div>
         <script src="prettify.js"></script>
         <script>

@@ -2,6 +2,7 @@ import { Settings } from 'lucide-react'
 import { StatusBadge, StatusDot } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Tooltip } from '@/components/ui/Tooltip'
 import type { TrustDomainRecord } from '@/data/mockData'
 
 interface TDHeaderProps {
@@ -16,7 +17,7 @@ export function TDHeader({ domain, onSettingsClick }: TDHeaderProps) {
       description={
         <>
           {domain.subtitle}{' '}
-          <a href="https://d.spirl.com/concepts/intro#trust-domains" style={{ color: '#798585', textDecoration: 'underline' }}>
+          <a href="https://d.spirl.com/concepts/intro#trust-domains" style={{ color: '#3e7c79', textDecoration: 'underline' }}>
             Learn more
           </a>.
         </>
@@ -45,9 +46,11 @@ export function TDHeader({ domain, onSettingsClick }: TDHeaderProps) {
               {stat.label}
             </p>
             <div className="flex items-center" style={{ height: 32, gap: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#101212', letterSpacing: '0.26px' }}>
-                {stat.value}
-              </span>
+              <Tooltip content={stat.label} side="bottom">
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#101212', letterSpacing: '0.26px' }}>
+                  {stat.value}
+                </span>
+              </Tooltip>
               {stat.dot && <StatusDot status="good" />}
             </div>
           </div>

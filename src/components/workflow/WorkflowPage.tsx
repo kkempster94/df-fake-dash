@@ -8,35 +8,19 @@ import { CodeBlock } from '@/components/ui/CodeBlock'
 import { WizardNav } from '@/components/ui/WizardNav'
 import { Tabs } from '@/components/ui/Tabs'
 import { MonoText } from '@/components/ui/MonoText'
+import { Alert } from '@/components/ui/Alert'
+import { ActionGroup } from '@/components/ui/ActionGroup'
+import { RemediationWorkflowBadge, RiskScoreBadge } from '@/components/ui/Badge'
 import { workflowMeta, workflowSteps, workflowStepContent } from '@/data/mockData'
-
-// Status badge inline for now (Planning = blue tinted)
-function WorkflowStatusBadge({ status }: { status: string }) {
-  const isPlanng = status === 'Planning'
-  return (
-    <span
-      className="inline-flex items-center justify-center rounded-full font-semibold whitespace-nowrap"
-      style={{
-        backgroundColor: isPlanng ? 'rgba(2,124,231,0.08)' : 'rgba(95,105,105,0.1)',
-        color: isPlanng ? '#027ce7' : '#5f6969',
-        fontSize: 10,
-        letterSpacing: '0.2px',
-        padding: '0 10px',
-        height: 20,
-      }}
-    >
-      {status}
-    </span>
-  )
-}
 
 export function WorkflowPage() {
   const [activeStepId, setActiveStepId] = useState('step-2')
-  const [activeTabId, setActiveTabId] = useState<Record<string, string>>({
+  const [activeTabId, setActiveTabId]   = useState<Record<string, string>>({
     'step-2': 'azure-cli',
     'step-3': 'env',
     'step-4': 'aws-cli',
   })
+  const [alertDismissed, setAlertDismissed] = useState(false)
 
   const content = workflowStepContent[activeStepId]
 
@@ -51,20 +35,14 @@ export function WorkflowPage() {
 
   const infoItems = [
     { label: 'Workflow ID',          value: <MonoText>{workflowMeta.id}</MonoText> },
-    { label: 'Risk Score',           value: (
-        <span className="inline-flex items-center justify-center rounded-full font-semibold"
-          style={{ backgroundColor: 'rgba(255,112,32,0.07)', color: '#ff7020', fontSize: 10, padding: '0 10px', height: 20 }}>
-          {workflowMeta.riskScore}
-        </span>
-      )
-    },
+    { label: 'Risk Score',           value: <RiskScoreBadge level={workflowMeta.riskLevel} /> },
     { label: 'Remediation Type',     value: workflowMeta.remediationType },
     { label: 'Provider Type',        value: workflowMeta.providerType },
-    { label: 'Status',               value: <WorkflowStatusBadge status={workflowMeta.status} /> },
+    { label: 'Status',               value: <RemediationWorkflowBadge status={workflowMeta.status} /> },
     { label: 'Application',          value: (
-        <a href="#" style={{ color: '#101212', fontSize: 13, textDecoration: 'underline' }}>
+        <Button variant="link" onClick={() => {}}>
           {workflowMeta.application}
-        </a>
+        </Button>
       )
     },
     { label: 'Security Owner',       value: workflowMeta.securityOwner },
@@ -75,6 +53,8 @@ export function WorkflowPage() {
     { label: 'Last Updated',         value: workflowMeta.lastUpdated },
   ]
 
+  const stepIndex = workflowSteps.findIndex((s) => s.id === activeStepId)
+
   return (
     <div className="flex flex-col w-full h-full">
       <PageHeader
@@ -82,7 +62,7 @@ export function WorkflowPage() {
         description={
           <>
             Remediation instructions for fixing a detected risk.{' '}
-            <a href="#" style={{ color: '#798585', textDecoration: 'underline' }}>Learn more.</a>
+            <a href="https://d.spirl.com/concepts/intro" style={{ color: '#798585', textDecoration: 'underline' }}>Learn more.</a>
           </>
         }
         action={<Button variant="primary" Icon={Radar}>Trigger manual rescan</Button>}
@@ -92,7 +72,10 @@ export function WorkflowPage() {
 
       {/* Tabs */}
       <Tabs
-        items={[{ id: 'work-steps', label: 'Work steps' }, { id: 'audit-history', label: 'Audit history' }]}
+        items={[
+          { id: 'work-steps',    label: 'Work steps',    count: workflowSteps.length },
+          { id: 'audit-history', label: 'Audit history' },
+        ]}
         activeId="work-steps"
         onChange={() => {}}
         className="mb-6"
@@ -108,15 +91,23 @@ export function WorkflowPage() {
 
         {/* Assessment panel */}
         <div className="flex flex-col gap-6 flex-1 min-w-0 overflow-y-auto pb-8">
+          {!alertDismissed && (
+            <Alert
+              severity="warning"
+              title="Automated scan triggered"
+              onDismiss={() => setAlertDismissed(true)}
+            >
+              This workflow was triggered by a scheduled scan. Review all steps carefully before proceeding.
+            </Alert>
+          )}
+
           {content && (
             <>
-              {/* Objective */}
               <ProseBlock
                 title={content.objective.title}
                 body={content.objective.body}
               />
 
-              {/* Sections */}
               {content.sections.map((section, si) => (
                 <div key={si} className="flex flex-col gap-4">
                   <ProseBlock title={section.title} body={section.body} />
@@ -141,28 +132,23 @@ export function WorkflowPage() {
           )}
 
           {/* Footer nav */}
-          <div
-            className="flex items-center justify-between pt-4 mt-auto"
-            style={{ borderTop: '1px solid #dde0e0' }}
-          >
-            <Button
-              variant="secondary"
-              onClick={() => {
-                const idx = workflowSteps.findIndex((s) => s.id === activeStepId)
-                if (idx > 0) setActiveStepId(workflowSteps[idx - 1].id)
-              }}
-            >
-              Previous step
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                const idx = workflowSteps.findIndex((s) => s.id === activeStepId)
-                if (idx < workflowSteps.length - 1) setActiveStepId(workflowSteps[idx + 1].id)
-              }}
-            >
-              Next step
-            </Button>
+          <div className="flex items-center justify-between pt-4 mt-auto border-t border-[#dde0e0]">
+            <ActionGroup
+              actions={[{
+                label: 'Previous step',
+                variant: 'secondary',
+                onClick: () => { if (stepIndex > 0) setActiveStepId(workflowSteps[stepIndex - 1].id) },
+                disabled: stepIndex <= 0,
+              }]}
+            />
+            <ActionGroup
+              actions={[{
+                label: 'Next step',
+                variant: 'primary',
+                onClick: () => { if (stepIndex < workflowSteps.length - 1) setActiveStepId(workflowSteps[stepIndex + 1].id) },
+                disabled: stepIndex >= workflowSteps.length - 1,
+              }]}
+            />
           </div>
         </div>
       </div>

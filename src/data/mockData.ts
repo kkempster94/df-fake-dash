@@ -30,6 +30,7 @@ export interface WorkloadIdentity {
   activeSvids: number
   lastIssued: string
   status: WorkloadIdentityStatus
+  trend: number[]
 }
 
 export interface TrustDomainRecord {
@@ -134,6 +135,14 @@ function generateAuditLogs(
   return entries
 }
 
+function generateTrend(seed: number): number[] {
+  let v = seed
+  return Array.from({ length: 7 }, () => {
+    v = (v * 1664525 + 1013904223) & 0xffffffff
+    return 10 + (Math.abs(v) % 50)
+  })
+}
+
 function generateWorkloadIdentities(
   domainName: string,
   paths: string[],
@@ -146,6 +155,7 @@ function generateWorkloadIdentities(
     activeSvids: svidCounts[i % svidCounts.length],
     lastIssued: getLastIssued(i),
     status: (i % 20 === 19 ? 'no-active-svids' : i % 10 === 9 ? 'expiring-soon' : 'active') as WorkloadIdentityStatus,
+    trend: generateTrend(i * 137 + 42),
   }))
 }
 
@@ -335,6 +345,7 @@ export interface WorkflowWizardStep {
 export const workflowMeta = {
   id: 'wf_2025_0147',
   riskScore: '5 / 10',
+  riskLevel: 'Concerning' as 'Good' | 'Concerning' | 'Bad',
   remediationType: 'Credential migration',
   providerType: 'AWS',
   status: 'Planning' as const,

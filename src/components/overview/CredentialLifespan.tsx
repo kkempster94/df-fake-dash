@@ -1,4 +1,4 @@
-import { Eye } from 'lucide-react'
+import { CloudCog } from 'lucide-react'
 import type { CredentialLifespanRow } from '@/data/mockData'
 import { Table, TableHeader, TableHeadCell, TableRow, TableCell } from '@/components/ui/Table'
 import { SectionHeader } from '@/components/ui/SectionHeader'
@@ -20,7 +20,7 @@ export function CredentialLifespan({ data }: CredentialLifespanProps) {
     <section className="flex flex-col gap-3 w-full pb-4">
       <SectionHeader
         title="Credential lifespan statistics"
-        action={<ActionButton label="View all audiences" Icon={Eye} />}
+        action={<ActionButton label="View all audiences" Icon={CloudCog} />}
       />
 
       <Table>

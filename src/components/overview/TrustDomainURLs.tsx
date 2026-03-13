@@ -1,7 +1,7 @@
 import { Table, TableHeader, TableHeadCell, TableRow, TableCell } from '@/components/ui/Table'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { CopyButton } from '@/components/ui/CopyButton'
-import { MonoText } from '@/components/ui/MonoText'
+import { UrlTag } from '@/components/ui/UrlTag'
 
 interface TrustDomainURLsProps {
   urls: Array<{ type: string; url: string }>
@@ -30,7 +30,7 @@ export function TrustDomainURLs({ urls }: TrustDomainURLsProps) {
               </span>
             </TableCell>
             <TableCell>
-              <MonoText muted>{row.url}</MonoText>
+              <UrlTag url={row.url} />
             </TableCell>
             <TableCell width={90}>
               <CopyButton value={row.url} />

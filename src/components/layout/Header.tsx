@@ -1,4 +1,5 @@
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
+import type { BreadcrumbItem } from '@/components/ui/Breadcrumbs'
 import { TrustDomainSelector } from '@/components/ui/TrustDomainSelector'
 import { trustDomains } from '@/data/mockData'
 import type { Route } from '@/lib/routes'
@@ -19,7 +20,7 @@ const DOMAIN_OPTIONS = trustDomains.map(d => ({ id: d.id, name: d.name, status: 
 function buildCrumbs(route: Route | undefined, activeDomainId: string, onDomainChange: (id: string) => void) {
   if (!route) return []
 
-  const crumbs = [{ label: route.section }]
+  const crumbs: BreadcrumbItem[] = [{ label: route.section }]
 
   if (route.id === 'overview') {
     crumbs.push({ label: route.label })

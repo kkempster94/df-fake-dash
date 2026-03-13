@@ -9,11 +9,11 @@ const MINT_ITEMS = [
 ]
 
 const LEDGER_ITEMS = [
-  { id: 'dashboard',           label: 'Dashboard'              },
-  { id: 'scanners',            label: 'Scanners'               },
-  { id: 'static-credentials',  label: 'Static credentials'     },
-  { id: 'applications',        label: 'Applications'           },
-  { id: 'workflows',           label: 'Remediation workflows'  },
+  { id: 'dashboard',           label: 'Dashboard'                              },
+  { id: 'scanners',            label: 'Scanners'                               },
+  { id: 'static-credentials',  label: 'Static credentials'                    },
+  { id: 'applications',        label: 'Applications'                           },
+  { id: 'workflows',           label: 'Remediation workflows', alertBadge: true },
 ]
 
 const ORGANIZATION_ITEMS = [

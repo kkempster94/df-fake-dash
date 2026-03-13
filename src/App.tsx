@@ -97,7 +97,11 @@ export default function App() {
         )}
 
         {isOverview && (
-          <TabBar activeTab={activeTab} onTabChange={handleTabChange} />
+          <TabBar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            counts={{ identities: activeDomain.workloadIdentities.length }}
+          />
         )}
 
         <TrustDomainSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />

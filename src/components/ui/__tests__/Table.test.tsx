@@ -205,4 +205,110 @@ describe('TableCell', () => {
       render(<TableRow><TableCell /></TableRow>)
     ).not.toThrow()
   })
+
+  it('renders bold cellType with font-semibold', () => {
+    render(<TableRow><TableCell cellType="bold">Bold value</TableCell></TableRow>)
+    const span = screen.getByText('Bold value')
+    expect(span).toHaveClass('font-semibold')
+  })
+
+  it('renders link cellType as an anchor element', () => {
+    render(<TableRow><TableCell cellType="link" href="/test">Link text</TableCell></TableRow>)
+    const link = screen.getByRole('link', { name: 'Link text' })
+    expect(link).toBeInTheDocument()
+    expect(link).toHaveAttribute('href', '/test')
+  })
+
+  it('renders link cellType with fallback href # when no href provided', () => {
+    render(<TableRow><TableCell cellType="link">Fallback link</TableCell></TableRow>)
+    expect(screen.getByRole('link')).toHaveAttribute('href', '#')
+  })
+
+  it('renders code cellType with font-mono', () => {
+    render(<TableRow><TableCell cellType="code">spiffe://example</TableCell></TableRow>)
+    expect(screen.getByText('spiffe://example')).toHaveClass('font-mono')
+  })
+
+  it('renders healthDot cellType centered', () => {
+    render(<TableRow><TableCell cellType="healthDot"><span>dot</span></TableCell></TableRow>)
+    expect(screen.getByRole('cell')).toHaveClass('items-center')
+  })
+})
+
+describe('TableHeadCell sort', () => {
+  it('renders as a columnheader when onSort is provided', () => {
+    render(
+      <TableHeader>
+        <TableHeadCell onSort={() => {}}>Name</TableHeadCell>
+      </TableHeader>
+    )
+    expect(screen.getByRole('columnheader')).toBeInTheDocument()
+  })
+
+  it('calls onSort when sort columnheader is clicked', async () => {
+    const onSort = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <TableHeader>
+        <TableHeadCell onSort={onSort} sortDirection="none">Name</TableHeadCell>
+      </TableHeader>
+    )
+    await user.click(screen.getByRole('columnheader'))
+    expect(onSort).toHaveBeenCalledTimes(1)
+  })
+
+  it('has aria-sort="ascending" when sortDirection="up"', () => {
+    render(
+      <TableHeader>
+        <TableHeadCell onSort={() => {}} sortDirection="up">Name</TableHeadCell>
+      </TableHeader>
+    )
+    expect(screen.getByRole('columnheader')).toHaveAttribute('aria-sort', 'ascending')
+  })
+
+  it('has aria-sort="descending" when sortDirection="down"', () => {
+    render(
+      <TableHeader>
+        <TableHeadCell onSort={() => {}} sortDirection="down">Name</TableHeadCell>
+      </TableHeader>
+    )
+    expect(screen.getByRole('columnheader')).toHaveAttribute('aria-sort', 'descending')
+  })
+
+  it('has aria-sort="none" when sortDirection="none"', () => {
+    render(
+      <TableHeader>
+        <TableHeadCell onSort={() => {}} sortDirection="none">Name</TableHeadCell>
+      </TableHeader>
+    )
+    expect(screen.getByRole('columnheader')).toHaveAttribute('aria-sort', 'none')
+  })
+
+  it('renders teal sort icon for "up" direction', () => {
+    const { container } = render(
+      <TableHeader>
+        <TableHeadCell onSort={() => {}} sortDirection="up">Name</TableHeadCell>
+      </TableHeader>
+    )
+    const svgs = container.querySelectorAll('svg')
+    expect(svgs.length).toBeGreaterThan(0)
+  })
+
+  it('renders sort icon for "down" direction', () => {
+    const { container } = render(
+      <TableHeader>
+        <TableHeadCell onSort={() => {}} sortDirection="down">Name</TableHeadCell>
+      </TableHeader>
+    )
+    expect(container.querySelector('svg')).toBeInTheDocument()
+  })
+
+  it('renders muted sort icon for "none" direction', () => {
+    const { container } = render(
+      <TableHeader>
+        <TableHeadCell onSort={() => {}} sortDirection="none">Name</TableHeadCell>
+      </TableHeader>
+    )
+    expect(container.querySelector('svg')).toBeInTheDocument()
+  })
 })

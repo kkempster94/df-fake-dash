@@ -1,4 +1,4 @@
-import { Layers, Eye } from 'lucide-react'
+import { Layers, CloudCog } from 'lucide-react'
 import type { TrustDomainRecord } from '@/data/mockData'
 import { GraphPanel } from './GraphPanel'
 import { WorkloadChart } from './WorkloadChart'
@@ -33,7 +33,7 @@ export function Overview({ domain, onViewWorkloads }: OverviewProps) {
           subtitle="Issued and rotated SPIFFE credentials"
           total={domain.chartTotals.credentials}
           actionLabel="View all active SVIDs"
-          ActionIcon={Eye}
+          ActionIcon={CloudCog}
           chart={<CredentialChart data={domain.credentialChartData} />}
           legend={<CredentialChartLegend />}
         />

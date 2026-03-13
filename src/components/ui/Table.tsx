@@ -1,4 +1,5 @@
 import type { ReactNode, CSSProperties } from 'react'
+import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 // ─── Table root ────────────────────────────────────────────────────────────────
@@ -36,28 +37,35 @@ export function TableHeader({ children }: TableHeaderProps) {
 
 // ─── Table.HeadCell ─────────────────────────────────────────────────────────────
 
+type SortDirection = 'hidden' | 'up' | 'down' | 'none'
+
 interface TableHeadCellProps {
   children?: ReactNode
-  width?: number       // fixed pixel width; omit for flex-1
-  className?: string   // padding override; default "pl-2"
+  width?: number
+  className?: string
+  sortDirection?: SortDirection
+  onSort?: () => void
 }
 
 export function TableHeadCell({
   children,
   width,
   className = 'pl-2',
+  sortDirection,
+  onSort,
 }: TableHeadCellProps) {
   const style: CSSProperties = width ? { width } : {}
-  return (
-    <div
-      className={cn(
-        'flex flex-col h-full justify-center py-[6px]',
-        width ? 'flex-none' : 'flex-1 min-w-0',
-        className,
-      )}
-      style={style}
-      role="columnheader"
-    >
+
+  const sortIcon = sortDirection === 'up'
+    ? <ArrowUp size={12} style={{ color: '#3e7c79', flexShrink: 0 }} />
+    : sortDirection === 'down'
+      ? <ArrowDown size={12} style={{ color: '#3e7c79', flexShrink: 0 }} />
+      : sortDirection === 'hidden' || sortDirection === 'none'
+        ? <ArrowUpDown size={12} style={{ color: '#798585', opacity: 0.5, flexShrink: 0 }} />
+        : null
+
+  const inner = (
+    <>
       {children != null && (
         <span
           className="uppercase font-medium whitespace-nowrap"
@@ -66,6 +74,33 @@ export function TableHeadCell({
           {children}
         </span>
       )}
+      {sortIcon}
+    </>
+  )
+
+  const sharedClass = cn(
+    'flex items-center gap-1 h-full py-[6px]',
+    width ? 'flex-none' : 'flex-1 min-w-0',
+    className,
+  )
+
+  if (onSort) {
+    return (
+      <button
+        role="columnheader"
+        onClick={onSort}
+        className={cn(sharedClass, 'cursor-pointer border-none bg-transparent')}
+        style={style}
+        aria-sort={sortDirection === 'up' ? 'ascending' : sortDirection === 'down' ? 'descending' : 'none'}
+      >
+        {inner}
+      </button>
+    )
+  }
+
+  return (
+    <div className={sharedClass} style={style} role="columnheader">
+      {inner}
     </div>
   )
 }
@@ -92,25 +127,62 @@ export function TableRow({ children, onClick }: TableRowProps) {
 
 // ─── Table.Cell ───────────────────────────────────────────────────────────────
 
+type TableCellType = 'body' | 'bold' | 'link' | 'code' | 'badge' | 'healthDot' | 'urlTag' | 'alertBadge'
+
 interface TableCellProps {
   children?: ReactNode
   width?: number
-  className?: string   // padding override; default "pl-2"
+  className?: string
+  cellType?: TableCellType
+  href?: string
 }
 
-export function TableCell({ children, width, className = 'pl-2' }: TableCellProps) {
+export function TableCell({ children, width, className = 'pl-2', cellType = 'body', href }: TableCellProps) {
   const style: CSSProperties = width ? { width } : {}
+
+  function renderContent() {
+    switch (cellType) {
+      case 'bold':
+        return (
+          <span className="font-semibold truncate" style={{ color: '#101212', fontSize: 13 }}>
+            {children}
+          </span>
+        )
+      case 'link':
+        return (
+          <a
+            href={href ?? '#'}
+            className="underline truncate"
+            style={{ color: '#101212', fontSize: 13 }}
+          >
+            {children}
+          </a>
+        )
+      case 'code':
+        return (
+          <span className="font-mono truncate" style={{ color: '#3e7c79', fontSize: 12 }}>
+            {children}
+          </span>
+        )
+      case 'healthDot':
+        return <span className="flex items-center justify-center">{children}</span>
+      default:
+        return <>{children}</>
+    }
+  }
+
   return (
     <div
       className={cn(
         'flex flex-col h-full justify-center overflow-hidden',
+        cellType === 'healthDot' ? 'items-center' : '',
         width ? 'flex-none' : 'flex-1 min-w-0',
         className,
       )}
       style={style}
       role="cell"
     >
-      {children}
+      {renderContent()}
     </div>
   )
 }

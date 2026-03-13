@@ -14,11 +14,14 @@ interface CredentialChartProps {
   data: Array<{ x509: number; jwt: number }>
 }
 
+const X509_COLOR = 'rgba(2,174,231,0.5)'
+const JWT_COLOR  = 'rgba(29,195,115,0.5)'
+
 export function CredentialChart({ data }: CredentialChartProps) {
   const maxVal = Math.max(...data.map(d => d.x509))
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} barCategoryGap={4} barGap={2} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+      <BarChart data={data} barCategoryGap={2} barGap={2} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
         <XAxis dataKey="index" hide />
         <YAxis domain={[0, maxVal]} hide />
         <Tooltip
@@ -37,8 +40,8 @@ export function CredentialChart({ data }: CredentialChartProps) {
             )
           }}
         />
-        <Bar dataKey="x509" name="X.509" fill="rgba(2,174,231,0.5)" radius={[2, 2, 0, 0]} maxBarSize={14} />
-        <Bar dataKey="jwt"  name="JWT"   fill="rgba(29,195,115,0.5)" radius={[2, 2, 0, 0]} maxBarSize={14} />
+        <Bar dataKey="x509" name="X.509" fill={X509_COLOR} radius={[2, 2, 0, 0]} maxBarSize={14} />
+        <Bar dataKey="jwt"  name="JWT"   fill={JWT_COLOR}  radius={[2, 2, 0, 0]} maxBarSize={14} />
       </BarChart>
     </ResponsiveContainer>
   )
@@ -47,8 +50,8 @@ export function CredentialChart({ data }: CredentialChartProps) {
 export function CredentialChartLegend() {
   return (
     <div className="flex items-center gap-4">
-      <LegendKey color="rgba(2,174,231,0.5)" label="X.509" />
-      <LegendKey color="rgba(29,195,115,0.5)" label="JWT" />
+      <LegendKey color={X509_COLOR} label="X.509" />
+      <LegendKey color={JWT_COLOR}  label="JWT" />
     </div>
   )
 }

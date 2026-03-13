@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TrustDomainSelector } from '../TrustDomainSelector'
 import type { DomainOption } from '../TrustDomainSelector'
@@ -86,6 +86,20 @@ describe('TrustDomainSelector', () => {
     expect(btn).toHaveAttribute('aria-expanded', 'false')
     await user.click(btn)
     expect(btn).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('falls back to first domain when selectedId does not match any domain', () => {
+    render(<TrustDomainSelector domains={DOMAINS} selectedId="nonexistent" onSelect={() => {}} />)
+    expect(screen.getByText('production.newco.com')).toBeInTheDocument()
+  })
+
+  it('closes dropdown on outside mousedown', async () => {
+    const user = userEvent.setup()
+    render(<TrustDomainSelector domains={DOMAINS} selectedId="production" onSelect={() => {}} />)
+    await user.click(screen.getByRole('button', { name: /select trust domain/i }))
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    fireEvent.mouseDown(document.body)
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
   })
 
   it('renders a status dot for the selected domain', () => {

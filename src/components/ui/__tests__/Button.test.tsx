@@ -91,4 +91,41 @@ describe('Button', () => {
     render(<Button type="submit">Submit</Button>)
     expect(screen.getByRole('button')).toHaveAttribute('type', 'submit')
   })
+
+  it('renders ghost variant with transparent background and teal color', () => {
+    render(<Button variant="ghost">Ghost</Button>)
+    const btn = screen.getByRole('button')
+    expect(btn).toHaveStyle({ color: '#3e7c79' })
+    const bg = btn.style.backgroundColor
+    expect(bg).not.toBe('#3e7c79')
+  })
+
+  it('renders link variant with transparent background', () => {
+    render(<Button variant="link">Link</Button>)
+    const btn = screen.getByRole('button')
+    expect(btn).toHaveStyle({ color: '#3e7c79' })
+    expect(btn.style.backgroundColor).not.toBe('#3e7c79')
+  })
+
+  it('renders destructive variant with pink bg and red color', () => {
+    render(<Button variant="destructive">Delete</Button>)
+    const btn = screen.getByRole('button')
+    expect(btn).toHaveStyle({ backgroundColor: 'rgba(205,61,97,0.07)', color: '#cd3d61' })
+  })
+
+  it('renders icon variant with teal color', () => {
+    render(<Button variant="icon" Icon={Star}>icon</Button>)
+    const btn = screen.getByRole('button')
+    expect(btn).toHaveStyle({ color: '#3e7c79' })
+  })
+
+  it('icon variant hides children text', () => {
+    render(<Button variant="icon" Icon={Star}>Hidden text</Button>)
+    expect(screen.queryByText('Hidden text')).not.toBeInTheDocument()
+  })
+
+  it('icon variant renders the icon svg', () => {
+    const { container } = render(<Button variant="icon" Icon={Star}>x</Button>)
+    expect(container.querySelector('svg')).toBeInTheDocument()
+  })
 })

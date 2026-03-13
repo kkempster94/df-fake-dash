@@ -115,4 +115,29 @@ describe('Tabs', () => {
     )
     expect(container.firstChild).toHaveStyle({ borderBottom: '1px solid #e9ebed' })
   })
+
+  it('renders count badge when count is provided on a tab item', () => {
+    const itemsWithCount: TabItem[] = [
+      { id: 'overview', label: 'Overview', count: 42 },
+      { id: 'agents', label: 'Agents' },
+    ]
+    render(<Tabs items={itemsWithCount} activeId="overview" onChange={() => {}} />)
+    expect(screen.getByText('42')).toBeInTheDocument()
+  })
+
+  it('does not render count badge when count is not provided', () => {
+    render(<Tabs items={ITEMS} activeId="overview" onChange={() => {}} />)
+    // No numeric-only text nodes from badges
+    expect(screen.queryByText(/^\d+$/)).not.toBeInTheDocument()
+  })
+
+  it('renders inactive count badge with opacity 0.7', () => {
+    const items: TabItem[] = [
+      { id: 'a', label: 'A', count: 5 },
+      { id: 'b', label: 'B' },
+    ]
+    render(<Tabs items={items} activeId="b" onChange={() => {}} />)
+    const badge = screen.getByText('5')
+    expect(badge).toHaveStyle({ opacity: 0.7 })
+  })
 })

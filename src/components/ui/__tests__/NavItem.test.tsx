@@ -62,4 +62,20 @@ describe('NavItem', () => {
     )
     expect(container.querySelector('svg')).not.toBeInTheDocument()
   })
+
+  it('renders a red alert dot when alertBadge=true', () => {
+    const { container } = render(
+      <NavItem label="Alerts" isActive={false} onClick={() => {}} alertBadge />
+    )
+    const dot = container.querySelector('[aria-label="alert"]')
+    expect(dot).toBeInTheDocument()
+    expect(dot).toHaveStyle({ backgroundColor: '#cd3d61' })
+  })
+
+  it('does not render alert dot when alertBadge is not set', () => {
+    const { container } = render(
+      <NavItem label="Alerts" isActive={false} onClick={() => {}} />
+    )
+    expect(container.querySelector('[aria-label="alert"]')).not.toBeInTheDocument()
+  })
 })
