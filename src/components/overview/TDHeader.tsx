@@ -2,15 +2,39 @@ import { Settings } from 'lucide-react'
 import { StatusBadge, StatusDot } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Tooltip } from '@/components/ui/Tooltip'
-import type { TrustDomainRecord } from '@/data/mockData'
+import { useActiveDomainQuery } from '@/lib/queries'
 
 interface TDHeaderProps {
-  domain: TrustDomainRecord
   onSettingsClick?: () => void
 }
 
-export function TDHeader({ domain, onSettingsClick }: TDHeaderProps) {
+function TDHeaderSkeleton() {
+  return (
+    <PageHeader
+      title={<Skeleton width={224} height={28} />}
+      description={<Skeleton width={340} height={14} />}
+      action={<Skeleton width={130} height={36} />}
+    >
+      <div className="flex flex-wrap" style={{ columnGap: 36, rowGap: 0 }}>
+        {Array.from({ length: 5 }, (_, i) => (
+          <div key={i} className="flex flex-col gap-1.5">
+            <Skeleton width={56} height={10} />
+            <Skeleton width={72} height={20} />
+          </div>
+        ))}
+      </div>
+    </PageHeader>
+  )
+}
+
+export function TDHeader({ onSettingsClick }: TDHeaderProps) {
+  const { data: domain, isLoading } = useActiveDomainQuery()
+
+  if (isLoading) return <TDHeaderSkeleton />
+  if (!domain) return null
+
   return (
     <PageHeader
       title={<>{domain.name} <StatusBadge status={domain.status} /></>}

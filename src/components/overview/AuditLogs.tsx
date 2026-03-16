@@ -1,7 +1,9 @@
 import { Activity } from 'lucide-react'
-import type { AuditLogEntry, StatusLevel } from '@/data/mockData'
+import type { StatusLevel } from '@/data/mockData'
+import { useAuditLogsQuery } from '@/lib/queries'
 import { Table, TableHeader, TableHeadCell, TableRow, TableCell } from '@/components/ui/Table'
 import { SectionHeader } from '@/components/ui/SectionHeader'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { StatusDot } from '@/components/ui/Badge'
 import { ActionButton } from '@/components/ui/ActionButton'
 
@@ -27,11 +29,9 @@ function RichSummary({ parts }: { parts: SummaryPart[] }) {
   )
 }
 
-interface AuditLogsProps {
-  entries: AuditLogEntry[]
-}
+export function AuditLogs() {
+  const { data: entries = [], isLoading } = useAuditLogsQuery()
 
-export function AuditLogs({ entries }: AuditLogsProps) {
   return (
     <section className="flex flex-col gap-3 w-full pb-4">
       <SectionHeader
@@ -46,24 +46,38 @@ export function AuditLogs({ entries }: AuditLogsProps) {
           <TableHeadCell width={120}>TIME</TableHeadCell>
         </TableHeader>
 
-        {entries.slice(0, 5).map((entry) => (
-          <TableRow key={entry.id}>
-            <TableCell width={46} className="pl-4">
-              <StatusDot status={entry.status as StatusLevel} />
-            </TableCell>
-            <TableCell className="pl-0">
-              <RichSummary parts={entry.parts} />
-            </TableCell>
-            <TableCell width={120}>
-              <span
-                className="truncate"
-                style={{ fontSize: 13, color: '#3e3e3e', letterSpacing: '0.26px' }}
-              >
-                {entry.time}
-              </span>
-            </TableCell>
-          </TableRow>
-        ))}
+        {isLoading
+          ? Array.from({ length: 5 }, (_, i) => (
+              <TableRow key={i}>
+                <TableCell width={46} className="pl-4">
+                  <Skeleton width={8} height={8} className="rounded-full" />
+                </TableCell>
+                <TableCell className="pl-0">
+                  <Skeleton height={13} className="w-3/4" />
+                </TableCell>
+                <TableCell width={120}>
+                  <Skeleton width={72} height={13} />
+                </TableCell>
+              </TableRow>
+            ))
+          : entries.slice(0, 5).map((entry) => (
+              <TableRow key={entry.id}>
+                <TableCell width={46} className="pl-4">
+                  <StatusDot status={entry.status as StatusLevel} />
+                </TableCell>
+                <TableCell className="pl-0">
+                  <RichSummary parts={entry.parts} />
+                </TableCell>
+                <TableCell width={120}>
+                  <span
+                    className="truncate"
+                    style={{ fontSize: 13, color: '#3e3e3e', letterSpacing: '0.26px' }}
+                  >
+                    {entry.time}
+                  </span>
+                </TableCell>
+              </TableRow>
+            ))}
       </Table>
     </section>
   )

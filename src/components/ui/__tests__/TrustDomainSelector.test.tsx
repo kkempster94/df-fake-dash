@@ -110,4 +110,13 @@ describe('TrustDomainSelector', () => {
     const dot = container.querySelector('[data-status="degraded"]')
     expect(dot).toBeInTheDocument()
   })
+
+  it('does not crash when domains array is empty (loading state)', () => {
+    // Regression: domains=[] during async load previously crashed with
+    // "Cannot read properties of undefined (reading 'status')" because
+    // domains[0] is undefined when the array is empty.
+    expect(() =>
+      render(<TrustDomainSelector domains={[]} selectedId="production" onSelect={() => {}} />)
+    ).not.toThrow()
+  })
 })

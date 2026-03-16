@@ -33,6 +33,16 @@ export interface WorkloadIdentity {
   trend: number[]
 }
 
+export interface SvidStat {
+  label: string
+  value: string
+}
+
+export interface SvidTimeseriesPoint {
+  x509: number
+  jwt: number
+}
+
 export interface TrustDomainRecord {
   id: string
   name: string
@@ -46,6 +56,8 @@ export interface TrustDomainRecord {
   credentialLifespanData: CredentialLifespanRow[]
   auditLogEntries: AuditLogEntry[]
   workloadIdentities: WorkloadIdentity[]
+  svidStats: SvidStat[]
+  svidTimeseries: SvidTimeseriesPoint[]
 }
 
 // ── Internal generators ────────────────────────────────────────────────────────
@@ -167,6 +179,17 @@ function generateChartData(count: number, minVal: number, maxVal: number, seed: 
   })
 }
 
+function generateSvidTimeseries(seed: number): SvidTimeseriesPoint[] {
+  let v = seed
+  return Array.from({ length: 145 }, () => {
+    v = (v * 1664525 + 1013904223) & 0xffffffff
+    const total = 5 + (Math.abs(v) % 46)
+    v = (v * 1664525 + 1013904223) & 0xffffffff
+    const x509 = Math.round(total * (0.70 + (Math.abs(v) % 20) / 100))
+    return { x509, jwt: Math.max(0, total - x509) }
+  })
+}
+
 function generateCredentialChartData(count: number, x509Min: number, x509Max: number, jwtRatio: number, seed: number) {
   let v = seed
   return Array.from({ length: count }, () => {
@@ -224,6 +247,16 @@ export const trustDomains: TrustDomainRecord[] = [
         'ns/auth/sa/validator', 'ns/auth/sa/token-service', 'ns/auth/sa/oauth-proxy',
         'ns/payments/sa/fraud-detector', 'ns/api/sa/rate-limiter', 'ns/data/sa/archiver',
       ], 100),
+      svidStats: [
+        { label: 'Total workload identities', value: '847'        },
+        { label: 'Related clusters',          value: '9'          },
+        { label: 'Active SVIDs',              value: '12,453'     },
+        { label: 'X.509',                     value: '11,827'     },
+        { label: 'JWT',                       value: '626'        },
+        { label: 'SVIDs issued today',        value: '1,234'      },
+        { label: 'Issuance failures',         value: '23 (0.02%)' },
+      ],
+      svidTimeseries: generateSvidTimeseries(42),
     }
   })(),
 
@@ -268,6 +301,16 @@ export const trustDomains: TrustDomainRecord[] = [
         'ns/qa/sa/smoke-test', 'ns/qa/sa/regression-suite',
         'ns/auth/sa/validator', 'ns/auth/sa/token-service',
       ], 40),
+      svidStats: [
+        { label: 'Total workload identities', value: '203'        },
+        { label: 'Related clusters',          value: '4'          },
+        { label: 'Active SVIDs',              value: '3,147'      },
+        { label: 'X.509',                     value: '2,876'      },
+        { label: 'JWT',                       value: '271'        },
+        { label: 'SVIDs issued today',        value: '412'        },
+        { label: 'Issuance failures',         value: '2 (0.05%)' },
+      ],
+      svidTimeseries: generateSvidTimeseries(77),
     }
   })(),
 
@@ -312,6 +355,16 @@ export const trustDomains: TrustDomainRecord[] = [
         'ns/local/sa/mock-server', 'ns/local/sa/dev-proxy',
         'ns/api/sa/debug-handler',
       ], 20),
+      svidStats: [
+        { label: 'Total workload identities', value: '58'         },
+        { label: 'Related clusters',          value: '2'          },
+        { label: 'Active SVIDs',              value: '412'        },
+        { label: 'X.509',                     value: '381'        },
+        { label: 'JWT',                       value: '31'         },
+        { label: 'SVIDs issued today',        value: '89'         },
+        { label: 'Issuance failures',         value: '7 (1.73%)' },
+      ],
+      svidTimeseries: generateSvidTimeseries(999),
     }
   })(),
 ]

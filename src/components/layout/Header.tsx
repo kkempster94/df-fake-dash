@@ -1,13 +1,12 @@
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import type { BreadcrumbItem } from '@/components/ui/Breadcrumbs'
 import { TrustDomainSelector } from '@/components/ui/TrustDomainSelector'
-import { trustDomains } from '@/data/mockData'
+import { useDomainsQuery } from '@/lib/queries'
+import { useDomainContext } from '@/lib/DomainContext'
 import type { Route } from '@/lib/routes'
 
 interface HeaderProps {
   activeRoute?: Route
-  activeDomainId: string
-  onDomainChange: (id: string) => void
 }
 
 const HEADER_GRADIENT = [
@@ -15,33 +14,30 @@ const HEADER_GRADIENT = [
   'linear-gradient(182deg, rgba(17,165,158,0) 12%, rgba(17,165,158,0.1) 52%)',
 ].join(', ')
 
-const DOMAIN_OPTIONS = trustDomains.map(d => ({ id: d.id, name: d.name, status: d.status }))
+export function Header({ activeRoute }: HeaderProps) {
+  const { activeDomainId, setActiveDomainId } = useDomainContext()
+  const { data: domains = [] } = useDomainsQuery()
 
-function buildCrumbs(route: Route | undefined, activeDomainId: string, onDomainChange: (id: string) => void) {
-  if (!route) return []
-
-  const crumbs: BreadcrumbItem[] = [{ label: route.section }]
-
-  if (route.id === 'overview') {
-    crumbs.push({ label: route.label })
-    crumbs.push({
-      node: (
-        <TrustDomainSelector
-          domains={DOMAIN_OPTIONS}
-          selectedId={activeDomainId}
-          onSelect={onDomainChange}
-        />
-      ),
-    })
-  } else {
-    crumbs.push({ label: route.label })
+  const crumbs: BreadcrumbItem[] = []
+  if (activeRoute) {
+    crumbs.push({ label: activeRoute.section })
+    if (activeRoute.id === 'overview') {
+      crumbs.push({ label: activeRoute.label })
+      if (domains.length > 0) {
+        crumbs.push({
+          node: (
+            <TrustDomainSelector
+              domains={domains}
+              selectedId={activeDomainId}
+              onSelect={setActiveDomainId}
+            />
+          ),
+        })
+      }
+    } else {
+      crumbs.push({ label: activeRoute.label })
+    }
   }
-
-  return crumbs
-}
-
-export function Header({ activeRoute, activeDomainId, onDomainChange }: HeaderProps) {
-  const crumbs = buildCrumbs(activeRoute, activeDomainId, onDomainChange)
 
   return (
     <header

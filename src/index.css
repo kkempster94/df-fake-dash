@@ -34,6 +34,3 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Recharts overrides */
-.recharts-cartesian-axis-tick { display: none; }
-.recharts-cartesian-grid { display: none; }

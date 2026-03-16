@@ -19,7 +19,7 @@ Demo/fake infrastructure identity management portal (SPIFFE/SPIRE-style). Built 
 - Figma file key: `LV6XW34BWfMfWacvyxMnIe` (Arribada-sandbox)
 - Always fetch design context + screenshot before implementing a page or component
 - Treat Figma output as a reference — adapt to project conventions, do not paste raw Tailwind output
-- Known node IDs: Overview page `10:4177`, Header bar `10:4159`
+- Known node IDs: Overview page `10:4177`, Identities page `10:4178`, Header bar `10:4159`
 
 ---
 
@@ -119,6 +119,54 @@ src/
 3. If response too large, use `get_metadata` first to find child node IDs, then fetch individually
 4. Adapt output to project conventions (tokens, existing components, TypeScript types)
 5. Validate against screenshot before marking complete
+
+### When `get_metadata` output is too large (saved to a file)
+The tool saves the result to a `.txt` file and gives you the path. Use this pattern to explore it without fumbling:
+
+**Search for a node by name:**
+```bash
+python3 -c "
+import json, re
+with open('PASTE_PATH_HERE') as f:
+    text = json.load(f)[0]['text']
+for m in re.finditer(r'.{0,120}(?i:SEARCH_TERM).{0,120}', text):
+    print(m.group()); print('---')
+"
+```
+
+**Dump a subtree by node ID** (paste the id value, e.g. `10:4178`):
+```bash
+python3 -c "
+import json
+with open('PASTE_PATH_HERE') as f:
+    text = json.load(f)[0]['text']
+start = text.find('id=\"NODE_ID\"')
+print(text[start:start+6000])
+"
+```
+
+**Print only top-level children of a frame** (skips deep repetitive sub-nodes):
+```bash
+python3 -c "
+import json, re
+with open('PASTE_PATH_HERE') as f:
+    text = json.load(f)[0]['text']
+start = text.find('id=\"NODE_ID\"')
+chunk = text[start:start+12000]
+# Print only lines that are direct tag openers (id= lines), skip rect/vector spam
+for line in chunk.split('\n'):
+    stripped = line.strip()
+    if stripped.startswith('<') and 'id=' in stripped and 'name=' in stripped:
+        print(line)
+"
+```
+
+**Known large-file node IDs** (add to this list as you discover them):
+| Frame name | Node ID |
+|---|---|
+| Overview page | `10:4177` |
+| IDENTITIES page | `10:4178` |
+| Header bar | `10:4159` |
 
 ---
 

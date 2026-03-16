@@ -8,7 +8,7 @@ import { IdentitiesTab } from '@/components/overview/IdentitiesTab'
 import { TrustDomainSettingsModal } from '@/components/overview/TrustDomainSettingsModal'
 import { WorkflowPage } from '@/components/workflow/WorkflowPage'
 import { ROUTES, DEFAULT_PATH, DEFAULT_ID, pathToRoute, idToPath } from '@/lib/routes'
-import { trustDomains, DEFAULT_DOMAIN_ID } from '@/data/mockData'
+import { useWorkloadIdentitiesQuery } from '@/lib/queries'
 
 function ComingSoon({ label }: { label: string }) {
   return (
@@ -43,10 +43,11 @@ function setTabInUrl(tab: string) {
 }
 
 export default function App() {
-  const [activeNav, setActiveNav]           = useState(resolveInitialNav)
-  const [activeTab, setActiveTab]           = useState(resolveInitialTab)
-  const [activeDomainId, setActiveDomainId] = useState(DEFAULT_DOMAIN_ID)
-  const [settingsOpen, setSettingsOpen]     = useState(false)
+  const [activeNav, setActiveNav]       = useState(resolveInitialNav)
+  const [activeTab, setActiveTab]       = useState(resolveInitialTab)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const { data: identities } = useWorkloadIdentitiesQuery()
 
   useEffect(() => {
     function onPopState() {
@@ -77,41 +78,36 @@ export default function App() {
     handleTabChange('identities')
   }
 
-  const activeRoute  = ROUTES.find(r => r.id === activeNav)
-  const activeDomain = trustDomains.find(d => d.id === activeDomainId) ?? trustDomains[0]
-  const isOverview   = activeNav === 'overview'
+  const activeRoute = ROUTES.find(r => r.id === activeNav)
+  const isOverview  = activeNav === 'overview'
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ fontFamily: 'Inter, sans-serif' }}>
       <Sidebar activeItem={activeNav} onNavigate={handleNavigate} />
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Header
-          activeRoute={activeRoute}
-          activeDomainId={activeDomainId}
-          onDomainChange={setActiveDomainId}
-        />
+        <Header activeRoute={activeRoute} />
 
         {isOverview && (
-          <TDHeader domain={activeDomain} onSettingsClick={() => setSettingsOpen(true)} />
+          <TDHeader onSettingsClick={() => setSettingsOpen(true)} />
         )}
 
         {isOverview && (
           <TabBar
             activeTab={activeTab}
             onTabChange={handleTabChange}
-            counts={{ identities: activeDomain.workloadIdentities.length }}
+            counts={{ identities: identities?.length ?? 0 }}
           />
         )}
 
         <TrustDomainSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
         <main className="flex-1 overflow-y-auto bg-white">
-          <div className="px-12 py-6" style={{ maxWidth: 1285 }}>
+          <div className="px-12 py-6">
             {isOverview && activeTab === 'overview' ? (
-              <Overview domain={activeDomain} onViewWorkloads={handleViewWorkloads} />
+              <Overview onViewWorkloads={handleViewWorkloads} />
             ) : isOverview && activeTab === 'identities' ? (
-              <IdentitiesTab identities={activeDomain.workloadIdentities} />
+              <IdentitiesTab />
             ) : activeNav === 'workflows' ? (
               <WorkflowPage />
             ) : (

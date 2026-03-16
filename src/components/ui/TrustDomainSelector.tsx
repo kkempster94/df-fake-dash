@@ -20,6 +20,7 @@ export function TrustDomainSelector({ domains, selectedId, onSelect }: TrustDoma
   const containerRef = useRef<HTMLDivElement>(null)
 
   const selected = domains.find(d => d.id === selectedId) ?? domains[0]
+  if (!selected) return null
 
   useEffect(() => {
     if (!open) return
