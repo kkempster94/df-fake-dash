@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Table, TableHeader, TableHeadCell, TableRow, TableCell } from '../Table'
+import { renderHook, act } from '@testing-library/react'
+import { Table, TableHeader, TableHeadCell, TableRow, TableCell, useColumnWidths } from '../Table'
 
 describe('Table', () => {
   it('renders children', () => {
@@ -99,6 +100,101 @@ describe('TableHeadCell', () => {
       </TableHeader>
     )
     expect(screen.getByRole('columnheader')).toHaveClass('pl-4')
+  })
+})
+
+describe('TableHeadCell resize', () => {
+  it('renders a resize handle when onResize is provided', () => {
+    const { container } = render(
+      <TableHeader>
+        <TableHeadCell onResize={() => {}}>NAME</TableHeadCell>
+      </TableHeader>
+    )
+    expect(container.querySelector('[data-resize-handle="true"]')).toBeInTheDocument()
+  })
+
+  it('does not render a resize handle when onResize is not provided', () => {
+    const { container } = render(
+      <TableHeader>
+        <TableHeadCell>NAME</TableHeadCell>
+      </TableHeader>
+    )
+    expect(container.querySelector('[data-resize-handle="true"]')).not.toBeInTheDocument()
+  })
+
+  it('sets position:relative on the cell when onResize is provided', () => {
+    render(
+      <TableHeader>
+        <TableHeadCell width={150} onResize={() => {}}>NAME</TableHeadCell>
+      </TableHeader>
+    )
+    expect(screen.getByRole('columnheader')).toHaveStyle({ position: 'relative' })
+  })
+
+  it('calls onResize with the pixel delta when dragged', () => {
+    const onResize = vi.fn()
+    const { container } = render(
+      <TableHeader>
+        <TableHeadCell onResize={onResize}>NAME</TableHeadCell>
+      </TableHeader>
+    )
+    const handle = container.querySelector('[data-resize-handle="true"]')!
+
+    fireEvent.mouseDown(handle, { clientX: 100 })
+    fireEvent.mouseMove(document, { clientX: 130 })
+    fireEvent.mouseUp(document)
+
+    expect(onResize).toHaveBeenCalledWith(30)
+  })
+
+  it('accumulates multiple move events during a single drag', () => {
+    const onResize = vi.fn()
+    const { container } = render(
+      <TableHeader>
+        <TableHeadCell onResize={onResize}>NAME</TableHeadCell>
+      </TableHeader>
+    )
+    const handle = container.querySelector('[data-resize-handle="true"]')!
+
+    fireEvent.mouseDown(handle, { clientX: 100 })
+    fireEvent.mouseMove(document, { clientX: 120 })
+    fireEvent.mouseMove(document, { clientX: 135 })
+    fireEvent.mouseUp(document)
+
+    expect(onResize).toHaveBeenCalledTimes(2)
+    expect(onResize).toHaveBeenNthCalledWith(1, 20)
+    expect(onResize).toHaveBeenNthCalledWith(2, 15)
+  })
+
+  it('does not trigger onSort when resize handle is clicked', async () => {
+    const onSort = vi.fn()
+    const onResize = vi.fn()
+    const user = userEvent.setup()
+    const { container } = render(
+      <TableHeader>
+        <TableHeadCell onSort={onSort} sortDirection="none" onResize={onResize}>NAME</TableHeadCell>
+      </TableHeader>
+    )
+    const handle = container.querySelector('[data-resize-handle="true"]')!
+    await user.click(handle)
+    expect(onSort).not.toHaveBeenCalled()
+  })
+
+  it('stops firing after mouseUp', () => {
+    const onResize = vi.fn()
+    const { container } = render(
+      <TableHeader>
+        <TableHeadCell onResize={onResize}>NAME</TableHeadCell>
+      </TableHeader>
+    )
+    const handle = container.querySelector('[data-resize-handle="true"]')!
+
+    fireEvent.mouseDown(handle, { clientX: 100 })
+    fireEvent.mouseMove(document, { clientX: 120 })
+    fireEvent.mouseUp(document)
+    fireEvent.mouseMove(document, { clientX: 150 })
+
+    expect(onResize).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -310,5 +406,112 @@ describe('TableHeadCell sort', () => {
       </TableHeader>
     )
     expect(container.querySelector('svg')).toBeInTheDocument()
+  })
+})
+
+describe('ResizeHandle + useColumnWidths integration', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  function ResizableTable() {
+    const { widths, setWidth } = useColumnWidths('test-resize', { col: 200 })
+    return (
+      <TableHeader>
+        <TableHeadCell
+          width={widths.col}
+          onResize={d => setWidth('col', Math.max(60, widths.col + d))}
+        >
+          COL
+        </TableHeadCell>
+      </TableHeader>
+    )
+  }
+
+  it('applies each successive delta to the latest width', () => {
+    const { container } = render(<ResizableTable />)
+    const handle = container.querySelector('[data-resize-handle="true"]')!
+
+    fireEvent.mouseDown(handle, { clientX: 100 })
+    fireEvent.mouseMove(document, { clientX: 120 }) // +20 → 220
+    fireEvent.mouseMove(document, { clientX: 140 }) // +20 → 240
+    fireEvent.mouseUp(document)
+
+    expect(screen.getByRole('columnheader')).toHaveStyle({ width: '240px' })
+  })
+
+  it('persists the final width to localStorage after a multi-step drag', () => {
+    const { container } = render(<ResizableTable />)
+    const handle = container.querySelector('[data-resize-handle="true"]')!
+
+    fireEvent.mouseDown(handle, { clientX: 0 })
+    fireEvent.mouseMove(document, { clientX: 50 })  // +50 → 250
+    fireEvent.mouseMove(document, { clientX: 100 }) // +50 → 300
+    fireEvent.mouseUp(document)
+
+    expect(JSON.parse(localStorage.getItem('test-resize')!).col).toBe(300)
+  })
+})
+
+describe('useColumnWidths', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('returns defaults when localStorage is empty', () => {
+    const { result } = renderHook(() =>
+      useColumnWidths('test-table', { name: 200, status: 100 })
+    )
+    expect(result.current.widths).toEqual({ name: 200, status: 100 })
+  })
+
+  it('merges stored values over defaults', () => {
+    localStorage.setItem('test-table', JSON.stringify({ name: 300 }))
+    const { result } = renderHook(() =>
+      useColumnWidths('test-table', { name: 200, status: 100 })
+    )
+    expect(result.current.widths.name).toBe(300)
+    expect(result.current.widths.status).toBe(100)
+  })
+
+  it('setWidth updates the width and persists to localStorage', () => {
+    const { result } = renderHook(() =>
+      useColumnWidths('test-table', { name: 200, status: 100 })
+    )
+    act(() => {
+      result.current.setWidth('name', 350)
+    })
+    expect(result.current.widths.name).toBe(350)
+    expect(JSON.parse(localStorage.getItem('test-table')!).name).toBe(350)
+  })
+
+  it('setWidth does not affect other columns', () => {
+    const { result } = renderHook(() =>
+      useColumnWidths('test-table', { name: 200, status: 100 })
+    )
+    act(() => {
+      result.current.setWidth('name', 350)
+    })
+    expect(result.current.widths.status).toBe(100)
+  })
+
+  it('falls back to defaults when localStorage contains invalid JSON', () => {
+    localStorage.setItem('test-table', 'not-json')
+    const { result } = renderHook(() =>
+      useColumnWidths('test-table', { name: 200, status: 100 })
+    )
+    expect(result.current.widths).toEqual({ name: 200, status: 100 })
+  })
+
+  it('uses a separate key per storageKey', () => {
+    const { result: a } = renderHook(() =>
+      useColumnWidths('table-a', { col: 100 })
+    )
+    const { result: b } = renderHook(() =>
+      useColumnWidths('table-b', { col: 200 })
+    )
+    act(() => { a.current.setWidth('col', 150) })
+    expect(a.current.widths.col).toBe(150)
+    expect(b.current.widths.col).toBe(200)
   })
 })

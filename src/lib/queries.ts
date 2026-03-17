@@ -1,46 +1,29 @@
-import { useQuery } from '@tanstack/react-query'
-import { trustDomains } from '@/data/mockData'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useDomainContext } from './DomainContext'
+import type { TrustDomainRecord, WorkloadIdentity, AuditLogEntry, Svid } from '@/data/mockData'
 
-// --- Fake async service functions (simulate API calls against mock data) ---
+// ── Fetch helpers ─────────────────────────────────────────────────────────────
 
-function sleep(ms: number) {
-  return new Promise<void>(resolve => setTimeout(resolve, ms))
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, init)
+  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`)
+  return res.json() as Promise<T>
 }
 
-async function fetchDomains() {
-  await sleep(500)
-  return trustDomains.map(d => ({ id: d.id, name: d.name, status: d.status }))
-}
-
-async function fetchDomain(id: string) {
-  await sleep(700)
-  return trustDomains.find(d => d.id === id) ?? trustDomains[0]
-}
-
-async function fetchWorkloadIdentities(domainId: string) {
-  await sleep(900)
-  const domain = trustDomains.find(d => d.id === domainId) ?? trustDomains[0]
-  return domain.workloadIdentities
-}
-
-async function fetchAuditLogs(domainId: string) {
-  await sleep(800)
-  const domain = trustDomains.find(d => d.id === domainId) ?? trustDomains[0]
-  return domain.auditLogEntries
-}
-
-// --- Custom hooks ---
+// ── Query hooks ───────────────────────────────────────────────────────────────
 
 export function useDomainsQuery() {
-  return useQuery({ queryKey: ['domains'], queryFn: fetchDomains })
+  return useQuery({
+    queryKey: ['domains'],
+    queryFn: () => apiFetch<Pick<TrustDomainRecord, 'id' | 'name' | 'status'>[]>('/api/domains'),
+  })
 }
 
 export function useActiveDomainQuery() {
   const { activeDomainId } = useDomainContext()
   return useQuery({
     queryKey: ['domain', activeDomainId],
-    queryFn: () => fetchDomain(activeDomainId),
+    queryFn: () => apiFetch<TrustDomainRecord>(`/api/domains/${activeDomainId}`),
   })
 }
 
@@ -48,7 +31,7 @@ export function useWorkloadIdentitiesQuery() {
   const { activeDomainId } = useDomainContext()
   return useQuery({
     queryKey: ['workloadIdentities', activeDomainId],
-    queryFn: () => fetchWorkloadIdentities(activeDomainId),
+    queryFn: () => apiFetch<WorkloadIdentity[]>(`/api/domains/${activeDomainId}/workload-identities`),
   })
 }
 
@@ -56,6 +39,32 @@ export function useAuditLogsQuery() {
   const { activeDomainId } = useDomainContext()
   return useQuery({
     queryKey: ['auditLogs', activeDomainId],
-    queryFn: () => fetchAuditLogs(activeDomainId),
+    queryFn: () => apiFetch<AuditLogEntry[]>(`/api/domains/${activeDomainId}/audit-logs`),
+  })
+}
+
+export function useSvidsQuery() {
+  const { activeDomainId } = useDomainContext()
+  return useQuery({
+    queryKey: ['svids', activeDomainId],
+    queryFn: () => apiFetch<Svid[]>(`/api/domains/${activeDomainId}/svids`),
+  })
+}
+
+export function useWorkflowMetaQuery() {
+  return useQuery({
+    queryKey: ['workflowMeta'],
+    queryFn: () => apiFetch<{ status: string }>('/api/workflow/meta'),
+  })
+}
+
+export function useTriggerRescan(callbacks?: { onSuccess?: () => void }) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => apiFetch<{ status: string }>('/api/workflow/rescan', { method: 'POST' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workflowMeta'] })
+      callbacks?.onSuccess?.()
+    },
   })
 }

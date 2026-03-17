@@ -1,6 +1,6 @@
 import { CloudCog } from 'lucide-react'
 import type { CredentialLifespanRow } from '@/data/mockData'
-import { Table, TableHeader, TableHeadCell, TableRow, TableCell } from '@/components/ui/Table'
+import { Table, TableHeader, TableHeadCell, TableRow, TableCell, useColumnWidths } from '@/components/ui/Table'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { CertificateBadge, AudienceTag } from '@/components/ui/Badge'
 import { ActionButton } from '@/components/ui/ActionButton'
@@ -16,6 +16,12 @@ interface CredentialLifespanProps {
 }
 
 export function CredentialLifespan({ data }: CredentialLifespanProps) {
+  const { widths, setWidth } = useColumnWidths('credential-lifespan-cols', {
+    credentialType: 170,
+    configuredLifetime: 170,
+    avgRemaining: 170,
+  })
+
   return (
     <section className="flex flex-col gap-3 w-full pb-4">
       <SectionHeader
@@ -25,21 +31,21 @@ export function CredentialLifespan({ data }: CredentialLifespanProps) {
 
       <Table>
         <TableHeader>
-          <TableHeadCell width={170} className="pl-4">CREDENTIAL TYPE</TableHeadCell>
-          <TableHeadCell width={170}>CONFIGURED LIFETIME</TableHeadCell>
-          <TableHeadCell width={170}>AVG REMAINING</TableHeadCell>
+          <TableHeadCell width={widths.credentialType} className="pl-4" onResize={d => setWidth('credentialType', Math.max(60, widths.credentialType + d))}>CREDENTIAL TYPE</TableHeadCell>
+          <TableHeadCell width={widths.configuredLifetime} onResize={d => setWidth('configuredLifetime', Math.max(60, widths.configuredLifetime + d))}>CONFIGURED LIFETIME</TableHeadCell>
+          <TableHeadCell width={widths.avgRemaining} onResize={d => setWidth('avgRemaining', Math.max(60, widths.avgRemaining + d))}>AVG REMAINING</TableHeadCell>
           <TableHeadCell>TOP AUDIENCES</TableHeadCell>
         </TableHeader>
 
         {data.map((row) => (
           <TableRow key={row.type}>
-            <TableCell width={170} className="pl-4">
+            <TableCell width={widths.credentialType} className="pl-4">
               <CertificateBadge type={row.type} />
             </TableCell>
-            <TableCell width={170}>
+            <TableCell width={widths.configuredLifetime}>
               <span className="truncate" style={CELL_TEXT}>{row.configuredLifetime}</span>
             </TableCell>
-            <TableCell width={170}>
+            <TableCell width={widths.avgRemaining}>
               <span className="truncate" style={CELL_TEXT}>{row.avgRemaining}</span>
             </TableCell>
             <TableCell>

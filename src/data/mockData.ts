@@ -4,6 +4,18 @@ export type StatusLevel = 'good' | 'degraded' | 'bad'
 export type CredentialType = 'x509' | 'jwt'
 export type WorkloadIdentityStatus = 'active' | 'expiring-soon' | 'no-active-svids'
 
+export type SvidStatus = 'active' | 'expiring-soon' | 'expired' | 'revoked'
+
+export interface Svid {
+  id: string
+  spiffeId: string
+  type: CredentialType
+  status: SvidStatus
+  serialNumber: string
+  issuedAt: string
+  expiresAt: string
+}
+
 export interface CredentialLifespanRow {
   type: CredentialType
   configuredLifetime: string
@@ -58,6 +70,7 @@ export interface TrustDomainRecord {
   workloadIdentities: WorkloadIdentity[]
   svidStats: SvidStat[]
   svidTimeseries: SvidTimeseriesPoint[]
+  svids: Svid[]
 }
 
 // ── Internal generators ────────────────────────────────────────────────────────
@@ -199,6 +212,34 @@ function generateCredentialChartData(count: number, x509Min: number, x509Max: nu
   })
 }
 
+function getSvidExpiry(status: SvidStatus, r: number): string {
+  if (status === 'expired')        return `${(r % 5) + 1} ${r % 2 === 0 ? 'hours' : 'days'} ago`
+  if (status === 'revoked')        return 'Revoked'
+  if (status === 'expiring-soon')  return `in ${(r % 8) + 1} mins`
+  return (r % 3) === 0 ? `in ${(r % 20) + 1} hrs` : `in ${(r % 50) + 15} mins`
+}
+
+function generateSvids(identities: WorkloadIdentity[], count: number, seed: number): Svid[] {
+  let v = seed
+  const lcg = () => { v = (v * 1664525 + 1013904223) & 0xffffffff; return Math.abs(v) }
+  const STATUSES: SvidStatus[] = ['active', 'active', 'active', 'active', 'expiring-soon', 'expiring-soon', 'expired', 'revoked']
+  return Array.from({ length: count }, (_, i) => {
+    const wi = identities[i % identities.length]
+    const type: CredentialType = lcg() % 10 < 2 ? 'jwt' : 'x509'
+    const status = STATUSES[lcg() % STATUSES.length]
+    const serial = `${lcg().toString(16).padStart(8, '0')}:${lcg().toString(16).padStart(8, '0')}`.toUpperCase()
+    return {
+      id: `svid-${seed}-${i + 1}`,
+      spiffeId: wi.spiffeId,
+      type,
+      status,
+      serialNumber: serial,
+      issuedAt: getLastIssued(i),
+      expiresAt: getSvidExpiry(status, lcg()),
+    }
+  })
+}
+
 const SUBTITLE = 'A trust domain represents a security boundary for SPIFFE identity issuance and validation.'
 
 // ── Trust domains ──────────────────────────────────────────────────────────────
@@ -206,6 +247,16 @@ const SUBTITLE = 'A trust domain represents a security boundary for SPIFFE ident
 export const trustDomains: TrustDomainRecord[] = [
   (() => {
     const name = 'production.newco.com'
+    const workloadIdentities = generateWorkloadIdentities(name, [
+      'ns/api/sa/gateway', 'ns/api/sa/ingress', 'ns/api/sa/load-balancer',
+      'ns/payments/sa/checkout', 'ns/payments/sa/processor', 'ns/payments/sa/refund-svc',
+      'ns/data/sa/etl-worker', 'ns/data/sa/pipeline-runner', 'ns/data/sa/transformer',
+      'ns/monitoring/sa/prometheus', 'ns/monitoring/sa/alertmanager', 'ns/monitoring/sa/grafana',
+      'ns/legacy/sa/auth-bridge', 'ns/legacy/sa/session-store',
+      'ns/auth/sa/validator', 'ns/auth/sa/token-service', 'ns/auth/sa/oauth-proxy',
+      'ns/payments/sa/fraud-detector', 'ns/api/sa/rate-limiter', 'ns/data/sa/archiver',
+    ], 147)
+    const wiCount = workloadIdentities.length.toLocaleString()
     return {
       id: 'production', name, status: 'good' as StatusLevel, subtitle: SUBTITLE,
       stats: [
@@ -215,10 +266,10 @@ export const trustDomains: TrustDomainRecord[] = [
         { label: 'Trust Domain Servers',     value: '4',                dot: true  },
         { label: 'Clusters',                 value: '12',               dot: true  },
         { label: 'Agents',                   value: '127',              dot: true  },
-        { label: 'Active Workloads',         value: '847',              dot: true  },
+        { label: 'Active Workloads',         value: wiCount,            dot: true  },
         { label: 'Active Credentials',       value: '12.4K',            dot: true  },
       ],
-      chartTotals: { workloads: '847', credentials: '12,453' },
+      chartTotals: { workloads: wiCount, credentials: '12,453' },
       workloadChartData: generateChartData(66, 67, 95, 42),
       credentialChartData: generateCredentialChartData(50, 65, 95, 0.265, 123),
       trustDomainURLs: [
@@ -238,30 +289,31 @@ export const trustDomains: TrustDomainRecord[] = [
         ['key_x509_02', 'key_x509_03', 'key_jwt_01'],
         1000,
       ),
-      workloadIdentities: generateWorkloadIdentities(name, [
-        'ns/api/sa/gateway', 'ns/api/sa/ingress', 'ns/api/sa/load-balancer',
-        'ns/payments/sa/checkout', 'ns/payments/sa/processor', 'ns/payments/sa/refund-svc',
-        'ns/data/sa/etl-worker', 'ns/data/sa/pipeline-runner', 'ns/data/sa/transformer',
-        'ns/monitoring/sa/prometheus', 'ns/monitoring/sa/alertmanager', 'ns/monitoring/sa/grafana',
-        'ns/legacy/sa/auth-bridge', 'ns/legacy/sa/session-store',
-        'ns/auth/sa/validator', 'ns/auth/sa/token-service', 'ns/auth/sa/oauth-proxy',
-        'ns/payments/sa/fraud-detector', 'ns/api/sa/rate-limiter', 'ns/data/sa/archiver',
-      ], 100),
+      workloadIdentities,
       svidStats: [
-        { label: 'Total workload identities', value: '847'        },
-        { label: 'Related clusters',          value: '9'          },
-        { label: 'Active SVIDs',              value: '12,453'     },
-        { label: 'X.509',                     value: '11,827'     },
-        { label: 'JWT',                       value: '626'        },
-        { label: 'SVIDs issued today',        value: '1,234'      },
-        { label: 'Issuance failures',         value: '23 (0.02%)' },
+        { label: 'Total workload identities', value: wiCount        },
+        { label: 'Related clusters',          value: '9'            },
+        { label: 'Active SVIDs',              value: '12,453'       },
+        { label: 'X.509',                     value: '11,827'       },
+        { label: 'JWT',                       value: '626'          },
+        { label: 'SVIDs issued today',        value: '1,234'        },
+        { label: 'Issuance failures',         value: '23 (0.02%)'  },
       ],
       svidTimeseries: generateSvidTimeseries(42),
+      svids: generateSvids(workloadIdentities, 250, 42),
     }
   })(),
 
   (() => {
     const name = 'staging.newco.com'
+    const workloadIdentities = generateWorkloadIdentities(name, [
+      'ns/api/sa/gateway', 'ns/api/sa/ingress',
+      'ns/payments/sa/checkout', 'ns/payments/sa/processor',
+      'ns/test/sa/integration-runner', 'ns/test/sa/e2e-runner',
+      'ns/qa/sa/smoke-test', 'ns/qa/sa/regression-suite',
+      'ns/auth/sa/validator', 'ns/auth/sa/token-service',
+    ], 134)
+    const wiCount = workloadIdentities.length.toLocaleString()
     return {
       id: 'staging', name, status: 'good' as StatusLevel, subtitle: SUBTITLE,
       stats: [
@@ -271,10 +323,10 @@ export const trustDomains: TrustDomainRecord[] = [
         { label: 'Trust Domain Servers',     value: '2',                dot: true  },
         { label: 'Clusters',                 value: '4',                dot: true  },
         { label: 'Agents',                   value: '41',               dot: true  },
-        { label: 'Active Workloads',         value: '203',              dot: true  },
+        { label: 'Active Workloads',         value: wiCount,            dot: true  },
         { label: 'Active Credentials',       value: '3.1K',             dot: true  },
       ],
-      chartTotals: { workloads: '203', credentials: '3,147' },
+      chartTotals: { workloads: wiCount, credentials: '3,147' },
       workloadChartData: generateChartData(66, 28, 52, 77),
       credentialChartData: generateCredentialChartData(50, 25, 52, 0.27, 456),
       trustDomainURLs: [
@@ -294,28 +346,31 @@ export const trustDomains: TrustDomainRecord[] = [
         ['key_x509_stg_01', 'key_jwt_stg_01'],
         1000,
       ),
-      workloadIdentities: generateWorkloadIdentities(name, [
-        'ns/api/sa/gateway', 'ns/api/sa/ingress',
-        'ns/payments/sa/checkout', 'ns/payments/sa/processor',
-        'ns/test/sa/integration-runner', 'ns/test/sa/e2e-runner',
-        'ns/qa/sa/smoke-test', 'ns/qa/sa/regression-suite',
-        'ns/auth/sa/validator', 'ns/auth/sa/token-service',
-      ], 40),
+      workloadIdentities,
       svidStats: [
-        { label: 'Total workload identities', value: '203'        },
-        { label: 'Related clusters',          value: '4'          },
-        { label: 'Active SVIDs',              value: '3,147'      },
-        { label: 'X.509',                     value: '2,876'      },
-        { label: 'JWT',                       value: '271'        },
-        { label: 'SVIDs issued today',        value: '412'        },
-        { label: 'Issuance failures',         value: '2 (0.05%)' },
+        { label: 'Total workload identities', value: wiCount       },
+        { label: 'Related clusters',          value: '4'           },
+        { label: 'Active SVIDs',              value: '3,147'       },
+        { label: 'X.509',                     value: '2,876'       },
+        { label: 'JWT',                       value: '271'         },
+        { label: 'SVIDs issued today',        value: '412'         },
+        { label: 'Issuance failures',         value: '2 (0.05%)'  },
       ],
       svidTimeseries: generateSvidTimeseries(77),
+      svids: generateSvids(workloadIdentities, 200, 77),
     }
   })(),
 
   (() => {
     const name = 'dev.newco.com'
+    const workloadIdentities = generateWorkloadIdentities(name, [
+      'ns/api/sa/gateway',
+      'ns/test/sa/unit-runner', 'ns/test/sa/integration-runner',
+      'ns/dev/sa/local-service', 'ns/dev/sa/mock-backend',
+      'ns/local/sa/mock-server', 'ns/local/sa/dev-proxy',
+      'ns/api/sa/debug-handler',
+    ], 112)
+    const wiCount = workloadIdentities.length.toLocaleString()
     return {
       id: 'dev', name, status: 'degraded' as StatusLevel, subtitle: SUBTITLE,
       stats: [
@@ -325,10 +380,10 @@ export const trustDomains: TrustDomainRecord[] = [
         { label: 'Trust Domain Servers',     value: '1',                dot: true  },
         { label: 'Clusters',                 value: '2',                dot: true  },
         { label: 'Agents',                   value: '12',               dot: true  },
-        { label: 'Active Workloads',         value: '58',               dot: true  },
+        { label: 'Active Workloads',         value: wiCount,            dot: true  },
         { label: 'Active Credentials',       value: '412',              dot: true  },
       ],
-      chartTotals: { workloads: '58', credentials: '412' },
+      chartTotals: { workloads: wiCount, credentials: '412' },
       workloadChartData: generateChartData(66, 5, 22, 999),
       credentialChartData: generateCredentialChartData(50, 5, 22, 0.28, 789),
       trustDomainURLs: [
@@ -348,15 +403,9 @@ export const trustDomains: TrustDomainRecord[] = [
         ['key_x509_dev_01'],
         1000,
       ),
-      workloadIdentities: generateWorkloadIdentities(name, [
-        'ns/api/sa/gateway',
-        'ns/test/sa/unit-runner', 'ns/test/sa/integration-runner',
-        'ns/dev/sa/local-service', 'ns/dev/sa/mock-backend',
-        'ns/local/sa/mock-server', 'ns/local/sa/dev-proxy',
-        'ns/api/sa/debug-handler',
-      ], 20),
+      workloadIdentities,
       svidStats: [
-        { label: 'Total workload identities', value: '58'         },
+        { label: 'Total workload identities', value: wiCount      },
         { label: 'Related clusters',          value: '2'          },
         { label: 'Active SVIDs',              value: '412'        },
         { label: 'X.509',                     value: '381'        },
@@ -365,6 +414,7 @@ export const trustDomains: TrustDomainRecord[] = [
         { label: 'Issuance failures',         value: '7 (1.73%)' },
       ],
       svidTimeseries: generateSvidTimeseries(999),
+      svids: generateSvids(workloadIdentities, 150, 999),
     }
   })(),
 ]
@@ -422,7 +472,7 @@ export const workflowSteps: WorkflowWizardStep[] = [
   },
   {
     id: 'step-2',
-    title: 'Step 2: Clone IAM account long step name',
+    title: 'Step 2: Clone IAM account',
     subSteps: [
       { id: 'ss-2-1', label: 'Create a federated identity credential in Entra', completed: false },
     ],

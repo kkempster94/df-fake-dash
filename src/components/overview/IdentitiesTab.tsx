@@ -1,13 +1,15 @@
 import { useState } from 'react'
+import { AllSvidsSection } from './AllSvidsSection'
 import { Eye } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
 import type { WorkloadIdentityStatus } from '@/data/mockData'
 import { useActiveDomainQuery, useWorkloadIdentitiesQuery } from '@/lib/queries'
-import { Table, TableHeader, TableHeadCell, TableRow, TableCell } from '@/components/ui/Table'
+import { Table, TableHeader, TableHeadCell, TableRow, TableCell, useColumnWidths } from '@/components/ui/Table'
 import { MonoText } from '@/components/ui/MonoText'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { ActionButton } from '@/components/ui/ActionButton'
+import { QueryError } from '@/components/ui/QueryError'
 
 // ── Sub-nav ───────────────────────────────────────────────────────────────────
 
@@ -46,15 +48,25 @@ function StatusBadge({ status }: { status: WorkloadIdentityStatus }) {
 const CHART_TOTAL = 144
 const MINS_PER_POINT = 10
 
-// Ticks snap to 6-hour clock boundaries (12AM, 6AM, 12PM, 6PM).
+// Ticks snap to local-time 6-hour boundaries (12AM, 6AM, 12PM, 6PM).
 function buildChartTicks(): { ticks: number[]; labels: Record<number, string> } {
-  const now = Date.now()
+  const now = new Date()
+  const nowMs = now.getTime()
   const SIX_H = 6 * 3_600_000
-  const results: Array<{ idx: number; label: string }> = []
 
-  let boundary = Math.floor(now / SIX_H) * SIX_H
-  while (boundary >= now - 24 * 3_600_000) {
-    const minsAgo = (now - boundary) / 60_000
+  // Find the most recent local-time hour that is a multiple of 6
+  const lastBoundaryHour = Math.floor(now.getHours() / 6) * 6
+  const msSinceLastBoundary =
+    (now.getHours() - lastBoundaryHour) * 3_600_000 +
+    now.getMinutes() * 60_000 +
+    now.getSeconds() * 1_000 +
+    now.getMilliseconds()
+
+  const results: Array<{ idx: number; label: string }> = []
+  let boundary = nowMs - msSinceLastBoundary
+
+  while (boundary >= nowMs - 24 * 3_600_000) {
+    const minsAgo = (nowMs - boundary) / 60_000
     const idx = CHART_TOTAL - minsAgo / MINS_PER_POINT
     if (idx >= 0 && idx <= CHART_TOTAL) {
       const h = new Date(boundary).getHours()
@@ -132,9 +144,13 @@ function SvidTimeseriesChart({ data }: { data: Array<{ x509: number; jwt: number
   )
 }
 
+// ── Column widths ─────────────────────────────────────────────────────────────
+
+const IDENTITIES_COL_DEFAULTS = { spiffeId: 0, activeSvids: 120, lastIssued: 150, status: 160 }
+
 // ── Skeletons ─────────────────────────────────────────────────────────────────
 
-function WorkloadIdentitiesSkeleton() {
+function WorkloadIdentitiesSkeleton({ widths }: { widths: typeof IDENTITIES_COL_DEFAULTS }) {
   return (
     <div className="flex-1 min-w-0 flex flex-col gap-6">
       <Skeleton height={14} className="w-3/4" />
@@ -155,16 +171,16 @@ function WorkloadIdentitiesSkeleton() {
         <Table>
           <TableHeader>
             <TableHeadCell className="pl-4">SPIFFE ID</TableHeadCell>
-            <TableHeadCell width={120}>ACTIVE SVIDS</TableHeadCell>
-            <TableHeadCell width={150}>LAST ISSUED</TableHeadCell>
-            <TableHeadCell width={160}>STATUS</TableHeadCell>
+            <TableHeadCell width={widths.activeSvids}>ACTIVE SVIDS</TableHeadCell>
+            <TableHeadCell width={widths.lastIssued}>LAST ISSUED</TableHeadCell>
+            <TableHeadCell width={widths.status}>STATUS</TableHeadCell>
           </TableHeader>
           {Array.from({ length: 10 }, (_, i) => (
             <TableRow key={i}>
               <TableCell className="pl-4"><Skeleton height={13} className="w-72" /></TableCell>
-              <TableCell width={120}><Skeleton width={36} height={13} /></TableCell>
-              <TableCell width={150}><Skeleton width={90} height={13} /></TableCell>
-              <TableCell width={160}><Skeleton width={88} height={20} /></TableCell>
+              <TableCell width={widths.activeSvids}><Skeleton width={36} height={13} /></TableCell>
+              <TableCell width={widths.lastIssued}><Skeleton width={90} height={13} /></TableCell>
+              <TableCell width={widths.status}><Skeleton width={88} height={20} /></TableCell>
             </TableRow>
           ))}
         </Table>
@@ -177,10 +193,13 @@ function WorkloadIdentitiesSkeleton() {
 
 export function IdentitiesTab() {
   const [subSection, setSubSection] = useState<SubSection>('workload-identities')
-  const { data: domain, isLoading: domainLoading } = useActiveDomainQuery()
-  const { data: identities = [], isLoading: identitiesLoading } = useWorkloadIdentitiesQuery()
+  const { data: domain, isLoading: domainLoading, isError: domainError, refetch: refetchDomain } = useActiveDomainQuery()
+  const { data: identities = [], isLoading: identitiesLoading, isError: identitiesError, refetch: refetchIdentities } = useWorkloadIdentitiesQuery()
+  const { widths, setWidth } = useColumnWidths('identities-table-cols', IDENTITIES_COL_DEFAULTS)
 
   const isLoading = domainLoading || identitiesLoading
+  const isError = domainError || identitiesError
+  function retryAll() { void refetchDomain(); void refetchIdentities() }
 
   return (
     <div className="flex gap-6 w-full pb-9">
@@ -211,8 +230,10 @@ export function IdentitiesTab() {
 
       {/* Main pane */}
       {subSection === 'workload-identities' ? (
-        isLoading || !domain ? (
-          <WorkloadIdentitiesSkeleton />
+        isError ? (
+          <QueryError message="Failed to load workload identities." onRetry={retryAll} className="flex-1" />
+        ) : isLoading || !domain ? (
+          <WorkloadIdentitiesSkeleton widths={widths} />
         ) : (
           <div className="flex-1 min-w-0 flex flex-col gap-6">
             {/* Description */}
@@ -246,31 +267,31 @@ export function IdentitiesTab() {
             <div className="flex flex-col gap-3">
               <SectionHeader
                 title="Recent workload identities"
-                action={<ActionButton label="View all" Icon={Eye} />}
+                action={<ActionButton label="View all" Icon={Eye} onClick={() => setSubSection('all-svids')} />}
               />
               <Table>
                 <TableHeader>
                   <TableHeadCell className="pl-4">SPIFFE ID</TableHeadCell>
-                  <TableHeadCell width={120}>ACTIVE SVIDS</TableHeadCell>
-                  <TableHeadCell width={150}>LAST ISSUED</TableHeadCell>
-                  <TableHeadCell width={160}>STATUS</TableHeadCell>
+                  <TableHeadCell width={widths.activeSvids} onResize={d => setWidth('activeSvids', Math.max(60, widths.activeSvids + d))}>ACTIVE SVIDS</TableHeadCell>
+                  <TableHeadCell width={widths.lastIssued} onResize={d => setWidth('lastIssued', Math.max(60, widths.lastIssued + d))}>LAST ISSUED</TableHeadCell>
+                  <TableHeadCell width={widths.status} onResize={d => setWidth('status', Math.max(60, widths.status + d))}>STATUS</TableHeadCell>
                 </TableHeader>
                 {identities.slice(0, 10).map(wi => (
                   <TableRow key={wi.id}>
                     <TableCell className="pl-4">
                       <MonoText muted>{wi.spiffeId}</MonoText>
                     </TableCell>
-                    <TableCell width={120}>
+                    <TableCell width={widths.activeSvids}>
                       <span style={{ fontSize: 13, color: '#101212', letterSpacing: '0.26px' }}>
                         {wi.activeSvids}
                       </span>
                     </TableCell>
-                    <TableCell width={150}>
+                    <TableCell width={widths.lastIssued}>
                       <span style={{ fontSize: 13, color: '#798585', letterSpacing: '0.26px' }}>
                         {wi.lastIssued}
                       </span>
                     </TableCell>
-                    <TableCell width={160}>
+                    <TableCell width={widths.status}>
                       <StatusBadge status={wi.status} />
                     </TableCell>
                   </TableRow>
@@ -279,6 +300,8 @@ export function IdentitiesTab() {
             </div>
           </div>
         )
+      ) : subSection === 'all-svids' ? (
+        <AllSvidsSection />
       ) : (
         <div className="flex-1 flex items-center justify-center" style={{ minHeight: 200 }}>
           <p style={{ color: '#798585', fontSize: 13 }}>

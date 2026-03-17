@@ -1,11 +1,12 @@
 import { Activity } from 'lucide-react'
 import type { StatusLevel } from '@/data/mockData'
 import { useAuditLogsQuery } from '@/lib/queries'
-import { Table, TableHeader, TableHeadCell, TableRow, TableCell } from '@/components/ui/Table'
+import { Table, TableHeader, TableHeadCell, TableRow, TableCell, useColumnWidths } from '@/components/ui/Table'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { StatusDot } from '@/components/ui/Badge'
 import { ActionButton } from '@/components/ui/ActionButton'
+import { QueryError } from '@/components/ui/QueryError'
 
 interface SummaryPart {
   text: string
@@ -30,7 +31,8 @@ function RichSummary({ parts }: { parts: SummaryPart[] }) {
 }
 
 export function AuditLogs() {
-  const { data: entries = [], isLoading } = useAuditLogsQuery()
+  const { data: entries = [], isLoading, isError, refetch } = useAuditLogsQuery()
+  const { widths, setWidth } = useColumnWidths('audit-logs-cols', { time: 120 })
 
   return (
     <section className="flex flex-col gap-3 w-full pb-4">
@@ -43,10 +45,12 @@ export function AuditLogs() {
         <TableHeader>
           <TableHeadCell width={46} />
           <TableHeadCell>SUMMARY</TableHeadCell>
-          <TableHeadCell width={120}>TIME</TableHeadCell>
+          <TableHeadCell width={widths.time} onResize={d => setWidth('time', Math.max(60, widths.time + d))}>TIME</TableHeadCell>
         </TableHeader>
 
-        {isLoading
+        {isError ? (
+          <QueryError message="Failed to load audit logs." onRetry={() => void refetch()} />
+        ) : isLoading
           ? Array.from({ length: 5 }, (_, i) => (
               <TableRow key={i}>
                 <TableCell width={46} className="pl-4">
@@ -55,7 +59,7 @@ export function AuditLogs() {
                 <TableCell className="pl-0">
                   <Skeleton height={13} className="w-3/4" />
                 </TableCell>
-                <TableCell width={120}>
+                <TableCell width={widths.time}>
                   <Skeleton width={72} height={13} />
                 </TableCell>
               </TableRow>
@@ -68,7 +72,7 @@ export function AuditLogs() {
                 <TableCell className="pl-0">
                   <RichSummary parts={entry.parts} />
                 </TableCell>
-                <TableCell width={120}>
+                <TableCell width={widths.time}>
                   <span
                     className="truncate"
                     style={{ fontSize: 13, color: '#3e3e3e', letterSpacing: '0.26px' }}

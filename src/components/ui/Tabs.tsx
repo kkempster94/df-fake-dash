@@ -42,7 +42,7 @@ export function Tab({ id, label, count, isActive, onClick }: TabProps) {
             opacity: isActive ? 1 : 0.7,
           }}
         >
-          {count}
+          {count >= 1000 ? `${(count / 1000).toFixed(count % 1000 === 0 ? 0 : 1)}k` : count}
         </span>
       )}
     </button>

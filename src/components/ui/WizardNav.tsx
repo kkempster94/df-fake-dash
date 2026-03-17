@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 export interface WizardSubStep {
@@ -16,9 +17,25 @@ interface WizardNavProps {
   steps: WizardStep[]
   activeStepId: string
   onStepClick?: (id: string) => void
+  disabledStepIds?: string[]
 }
 
 function SubStepIcon({ completed }: { completed?: boolean }) {
+  if (completed) {
+    return (
+      <span
+        className="shrink-0 rounded-full inline-flex items-center justify-center"
+        style={{
+          width: 14,
+          height: 14,
+          backgroundColor: '#9fa8a7',
+          marginTop: 1,
+        }}
+      >
+        <Check size={9} strokeWidth={3} color="#ffffff" />
+      </span>
+    )
+  }
   return (
     <span
       className="shrink-0 rounded-full border"
@@ -26,25 +43,28 @@ function SubStepIcon({ completed }: { completed?: boolean }) {
         display: 'inline-block',
         width: 14,
         height: 14,
-        borderColor: completed ? '#3e7c79' : '#dde0e0',
-        backgroundColor: completed ? '#3e7c79' : 'transparent',
+        borderColor: '#dde0e0',
+        backgroundColor: 'transparent',
         marginTop: 1,
       }}
     />
   )
 }
 
-export function WizardNav({ steps, activeStepId, onStepClick }: WizardNavProps) {
+export function WizardNav({ steps, activeStepId, onStepClick, disabledStepIds = [] }: WizardNavProps) {
   return (
     <nav className="flex flex-col gap-8 w-60 shrink-0 border-r pr-0" style={{ borderColor: '#dde0e0' }}>
       {steps.map((step) => {
         const isActive = step.id === activeStepId
+        const isDisabled = disabledStepIds.includes(step.id)
         return (
           <button
             key={step.id}
             onClick={() => onStepClick?.(step.id)}
+            disabled={isDisabled}
             className={cn(
-              'flex flex-col gap-2 text-left border-r-4 border-solid w-full bg-transparent border-none cursor-pointer p-0 pr-6',
+              'flex flex-col gap-2 text-left border-r-4 border-solid w-full bg-transparent border-none p-0 pr-6',
+              isDisabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
             )}
             style={{
               borderRightColor: isActive ? '#3e7c79' : 'transparent',

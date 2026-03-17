@@ -95,15 +95,15 @@ export const RemediationDeploying: StoryObj = {
 
 export const RiskGood: StoryObj = {
   name: 'RiskScoreBadge · Good',
-  render: () => <RiskScoreBadge level="Good" />,
+  render: () => <RiskScoreBadge level="Good" score="2 / 10" />,
 }
 export const RiskConcerning: StoryObj = {
   name: 'RiskScoreBadge · Concerning',
-  render: () => <RiskScoreBadge level="Concerning" />,
+  render: () => <RiskScoreBadge level="Concerning" score="5 / 10" />,
 }
 export const RiskBad: StoryObj = {
   name: 'RiskScoreBadge · Bad',
-  render: () => <RiskScoreBadge level="Bad" />,
+  render: () => <RiskScoreBadge level="Bad" score="9 / 10" />,
 }
 
 // ─── ScannedCredentialBadge ───────────────────────────────────────────────────

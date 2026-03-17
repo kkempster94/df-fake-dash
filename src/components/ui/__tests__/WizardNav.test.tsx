@@ -78,18 +78,20 @@ describe('WizardNav', () => {
     ).not.toThrow()
   })
 
-  it('sub-steps with completed=true have teal border on their icon', () => {
+  it('sub-steps with completed=true render a checkmark icon', () => {
     const { container } = render(<WizardNav steps={steps} activeStepId="step-1" />)
     const icons = container.querySelectorAll('span.rounded-full')
-    // First sub-step is completed=true
-    expect(icons[0]).toHaveStyle({ borderColor: '#3e7c79' })
+    // First sub-step is completed=true — should have grey bg and contain an svg checkmark
+    expect(icons[0]).toHaveStyle({ backgroundColor: '#9fa8a7' })
+    expect(icons[0].querySelector('svg')).toBeInTheDocument()
   })
 
-  it('sub-steps with completed=false have non-teal border on their icon', () => {
+  it('sub-steps with completed=false render an empty circle', () => {
     const { container } = render(<WizardNav steps={steps} activeStepId="step-1" />)
     const icons = container.querySelectorAll('span.rounded-full')
-    // Second sub-step is completed=false
+    // Second sub-step is completed=false — should have light border and no checkmark
     expect(icons[1]).toHaveStyle({ borderColor: '#dde0e0' })
+    expect(icons[1].querySelector('svg')).not.toBeInTheDocument()
   })
 
   it('renders a nav element', () => {

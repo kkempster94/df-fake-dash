@@ -1,6 +1,77 @@
+import { useState, useRef, useEffect } from 'react'
 import type { ReactNode, CSSProperties } from 'react'
 import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import { cn } from '@/lib/cn'
+
+// ─── useColumnWidths ────────────────────────────────────────────────────────────
+
+export function useColumnWidths<T extends Record<string, number>>(
+  storageKey: string,
+  defaults: T,
+): { widths: T; setWidth: (col: keyof T & string, width: number) => void } {
+  const [widths, setWidths] = useState<T>(() => {
+    try {
+      const stored = localStorage.getItem(storageKey)
+      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults
+    } catch {
+      return defaults
+    }
+  })
+
+  function setWidth(col: keyof T & string, width: number) {
+    setWidths(prev => {
+      const next = { ...prev, [col]: width } as T
+      try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
+
+  return { widths, setWidth }
+}
+
+// ─── ResizeHandle ───────────────────────────────────────────────────────────────
+
+function ResizeHandle({ onResize }: { onResize: (delta: number) => void }) {
+  const onResizeRef = useRef(onResize)
+  useEffect(() => { onResizeRef.current = onResize })
+
+  function handleMouseDown(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    let lastX = e.clientX
+
+    function handleMouseMove(ev: MouseEvent) {
+      const delta = ev.clientX - lastX
+      lastX = ev.clientX
+      onResizeRef.current(delta)
+    }
+
+    function handleMouseUp() {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
+
+  return (
+    <div
+      aria-hidden="true"
+      data-resize-handle="true"
+      onMouseDown={handleMouseDown}
+      onClick={e => e.stopPropagation()}
+      style={{
+        position: 'absolute',
+        right: 0,
+        top: 0,
+        bottom: 0,
+        width: 4,
+        cursor: 'col-resize',
+      }}
+    />
+  )
+}
 
 // ─── Table root ────────────────────────────────────────────────────────────────
 
@@ -45,6 +116,7 @@ interface TableHeadCellProps {
   className?: string
   sortDirection?: SortDirection
   onSort?: () => void
+  onResize?: (delta: number) => void
 }
 
 export function TableHeadCell({
@@ -53,8 +125,12 @@ export function TableHeadCell({
   className = 'pl-2',
   sortDirection,
   onSort,
+  onResize,
 }: TableHeadCellProps) {
-  const style: CSSProperties = width ? { width } : {}
+  const style: CSSProperties = {
+    ...(width ? { width } : {}),
+    ...(onResize ? { position: 'relative' } : {}),
+  }
 
   const sortIcon = sortDirection === 'up'
     ? <ArrowUp size={12} style={{ color: '#3e7c79', flexShrink: 0 }} />
@@ -75,6 +151,7 @@ export function TableHeadCell({
         </span>
       )}
       {sortIcon}
+      {onResize && <ResizeHandle onResize={onResize} />}
     </>
   )
 

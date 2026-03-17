@@ -9,6 +9,7 @@ import { CredentialChart, CredentialChartLegend } from './CredentialChart'
 import { TrustDomainURLs } from './TrustDomainURLs'
 import { CredentialLifespan } from './CredentialLifespan'
 import { AuditLogs } from './AuditLogs'
+import { QueryError } from '@/components/ui/QueryError'
 
 interface OverviewProps {
   onViewWorkloads: () => void
@@ -78,9 +79,10 @@ function OverviewSkeleton(_props: OverviewProps) {
 }
 
 export function Overview({ onViewWorkloads }: OverviewProps) {
-  const { data: domain, isLoading } = useActiveDomainQuery()
+  const { data: domain, isLoading, isError, refetch } = useActiveDomainQuery()
 
   if (isLoading) return <OverviewSkeleton onViewWorkloads={onViewWorkloads} />
+  if (isError) return <QueryError message="Failed to load trust domain data." onRetry={() => void refetch()} className="py-24" />
   if (!domain) return null
 
   const totalWorkloads = parseInt(domain.chartTotals.workloads.replace(/,/g, ''), 10)

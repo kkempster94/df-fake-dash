@@ -123,12 +123,14 @@ describe('PercentageBadge', () => {
 
 describe('RemediationWorkflowBadge', () => {
   it.each([
-    ['NotStarted', 'Not Started'],
-    ['Cloning',    'Cloning'],
-    ['Complete',   'Complete'],
-    ['Deploying',  'Deploying'],
-    ['Planning',   'Planning'],
-    ['Pending',    'Pending'],
+    ['NotStarted',  'Not Started'],
+    ['Cloning',     'Cloning'],
+    ['Complete',    'Complete'],
+    ['Completed',   'Completed'],
+    ['Deploying',   'Deploying'],
+    ['Planning',    'Planning'],
+    ['Pending',     'Pending'],
+    ['In Progress', 'In Progress'],
   ] as const)('renders %s status label', (status, label) => {
     render(<RemediationWorkflowBadge status={status} />)
     expect(screen.getByText(label)).toBeInTheDocument()
@@ -158,18 +160,18 @@ describe('ScannedCredentialBadge', () => {
 })
 
 describe('RiskScoreBadge', () => {
-  it.each(['Good', 'Concerning', 'Bad'] as const)('renders %s level text', (level) => {
-    render(<RiskScoreBadge level={level} />)
-    expect(screen.getByText(level)).toBeInTheDocument()
+  it('renders the score string', () => {
+    render(<RiskScoreBadge level="Concerning" score="5 / 10" />)
+    expect(screen.getByText('5 / 10')).toBeInTheDocument()
   })
 
   it('renders Good with green color', () => {
-    const { container } = render(<RiskScoreBadge level="Good" />)
+    const { container } = render(<RiskScoreBadge level="Good" score="2 / 10" />)
     expect(container.firstChild).toHaveStyle({ color: '#28a868' })
   })
 
   it('renders Bad with red color', () => {
-    const { container } = render(<RiskScoreBadge level="Bad" />)
+    const { container } = render(<RiskScoreBadge level="Bad" score="9 / 10" />)
     expect(container.firstChild).toHaveStyle({ color: '#cd3d61' })
   })
 })

@@ -131,15 +131,17 @@ export function PercentageBadge({ type, value }: PercentageBadgeProps) {
 
 // ─── RemediationWorkflowBadge ──────────────────────────────────────────────────
 
-type RemediationStatus = 'NotStarted' | 'Cloning' | 'Complete' | 'Deploying' | 'Planning' | 'Pending'
+export type RemediationStatus = 'NotStarted' | 'Cloning' | 'Complete' | 'Completed' | 'Deploying' | 'Planning' | 'Pending' | 'In Progress'
 
 const REMEDIATION_CONFIG: Record<RemediationStatus, { bg: string; color: string; label: string }> = {
-  NotStarted: { bg: 'rgba(95,105,105,0.1)',   color: '#5f6969', label: 'Not Started' },
-  Cloning:    { bg: 'rgba(2,124,231,0.08)',   color: '#027ce7', label: 'Cloning'     },
-  Complete:   { bg: 'rgba(40,168,104,0.07)',  color: '#28a868', label: 'Complete'    },
-  Deploying:  { bg: 'rgba(2,174,231,0.08)',   color: '#02aee7', label: 'Deploying'   },
-  Planning:   { bg: 'rgba(2,124,231,0.08)',   color: '#027ce7', label: 'Planning'    },
-  Pending:    { bg: 'rgba(245,158,11,0.08)',  color: '#f59e0b', label: 'Pending'     },
+  NotStarted:  { bg: 'rgba(95,105,105,0.1)',   color: '#5f6969', label: 'Not Started' },
+  Cloning:     { bg: 'rgba(2,124,231,0.08)',   color: '#027ce7', label: 'Cloning'     },
+  Complete:    { bg: 'rgba(40,168,104,0.07)',  color: '#28a868', label: 'Complete'    },
+  Completed:   { bg: 'rgba(40,168,104,0.07)',  color: '#28a868', label: 'Completed'   },
+  Deploying:   { bg: 'rgba(2,174,231,0.08)',   color: '#02aee7', label: 'Deploying'   },
+  Planning:    { bg: 'rgba(2,124,231,0.08)',   color: '#027ce7', label: 'Planning'    },
+  Pending:     { bg: 'rgba(245,158,11,0.08)',  color: '#f59e0b', label: 'Pending'     },
+  'In Progress': { bg: 'rgba(2,174,231,0.08)', color: '#02aee7', label: 'In Progress' },
 }
 
 interface RemediationWorkflowBadgeProps {
@@ -196,16 +198,17 @@ const RISK_CONFIG: Record<RiskLevel, { bg: string; color: string }> = {
 
 interface RiskScoreBadgeProps {
   level: RiskLevel
+  score: string
 }
 
-export function RiskScoreBadge({ level }: RiskScoreBadgeProps) {
+export function RiskScoreBadge({ level, score }: RiskScoreBadgeProps) {
   const { bg, color } = RISK_CONFIG[level]
   return (
     <span
       className="inline-flex items-center justify-center rounded-full font-semibold"
       style={{ backgroundColor: bg, color, fontSize: 10, letterSpacing: '0.2px', padding: '0 8px', minHeight: 20, width: 82 }}
     >
-      {level}
+      {score}
     </span>
   )
 }

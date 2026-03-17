@@ -140,4 +140,22 @@ describe('Tabs', () => {
     const badge = screen.getByText('5')
     expect(badge).toHaveStyle({ opacity: 0.7 })
   })
+
+  it('formats counts >= 1000 as whole-number k', () => {
+    const items: TabItem[] = [{ id: 'a', label: 'A', count: 1000 }]
+    render(<Tabs items={items} activeId="a" onChange={() => {}} />)
+    expect(screen.getByText('1k')).toBeInTheDocument()
+  })
+
+  it('formats counts with decimal k when not a round thousand', () => {
+    const items: TabItem[] = [{ id: 'a', label: 'A', count: 1500 }]
+    render(<Tabs items={items} activeId="a" onChange={() => {}} />)
+    expect(screen.getByText('1.5k')).toBeInTheDocument()
+  })
+
+  it('renders counts below 1000 as plain numbers', () => {
+    const items: TabItem[] = [{ id: 'a', label: 'A', count: 999 }]
+    render(<Tabs items={items} activeId="a" onChange={() => {}} />)
+    expect(screen.getByText('999')).toBeInTheDocument()
+  })
 })
